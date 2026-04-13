@@ -8,16 +8,11 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #0f1117; color: #e2e8f0; font-family: 'Segoe UI', 'Apple SD Gothic Neo', sans-serif; min-height: 100vh; }
 
-    /* ── 화면 전환 ── */
     .page { display: none; }
     .page.active { display: block; }
-
-    /* ── 설정 화면 ── */
-    #page-setup {
-      min-height: 100vh; display: none;
-      align-items: center; justify-content: center;
-    }
+    #page-setup { min-height: 100vh; display: none; align-items: center; justify-content: center; }
     #page-setup.active { display: flex; }
+
     .setup-box {
       background: #1a1f2e; border: 1px solid #2d3748; border-radius: 14px;
       padding: 36px 40px; width: 100%; max-width: 520px;
@@ -27,18 +22,36 @@
     .setup-box p  { font-size: 0.82rem; color: #718096; margin-bottom: 24px; line-height: 1.6; }
     .form-group { margin-bottom: 16px; }
     .form-group label { display: block; font-size: 0.75rem; font-weight: 600; color: #a0aec0; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
-    .form-group input { width: 100%; background: #0f1117; border: 1px solid #2d3748; border-radius: 8px; color: #e2e8f0; font-size: 0.85rem; padding: 10px 14px; outline: none; transition: border-color 0.2s; }
-    .form-group input:focus { border-color: #e2b96f; }
+    .form-group input, .form-group select {
+      width: 100%; background: #0f1117; border: 1px solid #2d3748; border-radius: 8px;
+      color: #e2e8f0; font-size: 0.85rem; padding: 10px 14px; outline: none; transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: #e2b96f; }
     .form-group input::placeholder { color: #4a5568; font-size: 0.8rem; }
+    .form-group select option { background: #1a1f2e; }
     .form-hint { font-size: 0.72rem; color: #4a5568; margin-top: 4px; }
     .form-row { display: flex; gap: 12px; }
     .form-row .form-group { flex: 1; }
+
     #setup-error { background: #2d1515; border: 1px solid #822; border-radius: 6px; color: #fc8181; font-size: 0.82rem; padding: 10px 14px; margin-bottom: 14px; display: none; }
-    .btn-primary { width: 100%; background: #e2b96f; border: none; border-radius: 8px; color: #0f1117; font-size: 0.9rem; font-weight: 700; padding: 12px; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+    /* URL 입력 + 버튼 한 줄 */
+    .url-row { display: flex; gap: 8px; margin-bottom: 4px; }
+    .url-row input { flex: 1; background: #0f1117; border: 1px solid #2d3748; border-radius: 8px; color: #e2e8f0; font-size: 0.85rem; padding: 10px 14px; outline: none; transition: border-color 0.2s; }
+    .url-row input:focus { border-color: #e2b96f; }
+    .url-row input::placeholder { color: #4a5568; font-size: 0.8rem; }
+    .btn-search { background: #2d3748; border: none; border-radius: 8px; color: #a0aec0; font-size: 0.82rem; padding: 10px 14px; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+    .btn-search:hover { background: #3d4a5c; color: #e2e8f0; }
+    .btn-search:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* 시트 선택 영역 */
+    #sheet-select-area { display: none; margin-top: 8px; }
+
+    .btn-primary { width: 100%; background: #e2b96f; border: none; border-radius: 8px; color: #0f1117; font-size: 0.9rem; font-weight: 700; padding: 12px; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; }
     .btn-primary:hover { background: #f0c97a; }
     .btn-primary:disabled { background: #4a5568; color: #718096; cursor: not-allowed; }
 
-    /* ── 메인 화면 ── */
+    /* 메인 */
     header { background: linear-gradient(135deg, #1a1f2e, #16213e); border-bottom: 1px solid #2d3748; padding: 16px 32px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     header h1 { font-size: 1.25rem; font-weight: 700; color: #e2b96f; }
     #header-url { font-size: 0.7rem; color: #4a5568; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -57,7 +70,7 @@
     .search-wrap input { width: 100%; background: #1a1f2e; border: 1px solid #2d3748; border-radius: 8px; color: #e2e8f0; font-size: 0.88rem; padding: 8px 12px 8px 34px; outline: none; transition: border-color 0.2s; }
     .search-wrap input:focus { border-color: #e2b96f; }
     .search-wrap input::placeholder { color: #4a5568; }
-    select { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 8px; color: #e2e8f0; font-size: 0.88rem; padding: 8px 12px; outline: none; cursor: pointer; }
+    .toolbar select { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 8px; color: #e2e8f0; font-size: 0.88rem; padding: 8px 12px; outline: none; cursor: pointer; }
     #count { font-size: 0.78rem; color: #4a5568; white-space: nowrap; }
     #btn-refresh { background: #e2b96f; border: none; border-radius: 8px; color: #0f1117; font-size: 0.82rem; font-weight: 700; padding: 8px 16px; cursor: pointer; margin-left: auto; display: flex; align-items: center; gap: 6px; transition: background 0.2s; }
     #btn-refresh:hover { background: #f0c97a; }
@@ -66,7 +79,7 @@
     .table-wrap { padding: 0 32px 40px; overflow-x: auto; }
     #status-msg { text-align: center; padding: 50px; font-size: 0.9rem; color: #718096; }
     #status-msg.error { color: #fc8181; }
-    .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid #2d3748; border-top-color: #e2b96f; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
+    .spinner { display: inline-block; width: 22px; height: 22px; border: 3px solid #2d3748; border-top-color: #e2b96f; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     table { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
@@ -101,33 +114,39 @@
 <div id="page-setup" class="active">
   <div class="setup-box">
     <h2>⚔ 결사 멤버 현황</h2>
-    <p>스프레드시트 URL과 각 시트의 GID를 입력하세요.<br>
+    <p>스프레드시트 URL을 입력하고 <strong>시트 검색</strong>을 누르세요.<br>
        시트가 <strong>링크 공유(보기)</strong> 상태여야 합니다.</p>
+
     <div id="setup-error"></div>
+
     <div class="form-group">
       <label>스프레드시트 URL</label>
-      <input id="inp-url" type="text" placeholder="https://docs.google.com/spreadsheets/d/.../edit" />
+      <div class="url-row">
+        <input id="inp-url" type="text" placeholder="https://docs.google.com/spreadsheets/d/.../edit" />
+        <button class="btn-search" id="btn-search">시트 검색</button>
+      </div>
       <div class="form-hint">아무 탭에서나 주소창 URL을 복사하면 됩니다</div>
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>스펙표 GID</label>
-        <input id="inp-spec-gid" type="text" placeholder="예: 8154540" />
-        <div class="form-hint">스펙표 탭 URL의 gid= 숫자</div>
+
+    <div id="sheet-select-area">
+      <div class="form-row">
+        <div class="form-group">
+          <label>스펙표 시트</label>
+          <select id="sel-spec"></select>
+        </div>
+        <div class="form-group">
+          <label>대시보드 시트</label>
+          <select id="sel-dash"></select>
+        </div>
       </div>
-      <div class="form-group">
-        <label>대시보드 GID</label>
-        <input id="inp-dash-gid" type="text" placeholder="예: 1988878229" />
-        <div class="form-hint">대시보드 탭 URL의 gid= 숫자</div>
-      </div>
+      <button class="btn-primary" id="btn-load">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        데이터 불러오기
+      </button>
     </div>
-    <button class="btn-primary" id="btn-load">
-      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-        <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-      </svg>
-      데이터 불러오기
-    </button>
   </div>
 </div>
 
@@ -195,38 +214,93 @@
   const LS_DASH_GID = 'ap_dash_gid';
 
   let allData = [], sortCol = 'rank', sortDir = 1;
+  let cachedUrl = '';
 
   function showPage(id) {
     document.querySelectorAll('.page, #page-setup').forEach(el => el.classList.remove('active'));
     document.getElementById(id).classList.add('active');
   }
 
-  /* ── 초기화 ── */
+  function showError(msg) {
+    const el = document.getElementById('setup-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  /* ── 초기화: 저장된 설정 있으면 자동 로드 ── */
   window.addEventListener('DOMContentLoaded', () => {
     const u = localStorage.getItem(LS_URL)      || '';
     const s = localStorage.getItem(LS_SPEC_GID) || '';
     const d = localStorage.getItem(LS_DASH_GID) || '';
-    if (u) document.getElementById('inp-url').value      = u;
-    if (s) document.getElementById('inp-spec-gid').value = s;
-    if (d) document.getElementById('inp-dash-gid').value = d;
+    if (u) document.getElementById('inp-url').value = u;
     if (u && s && d) loadData(u, s, d);
   });
 
-  document.getElementById('btn-load').addEventListener('click', () => {
-    const u = document.getElementById('inp-url').value.trim();
-    const s = document.getElementById('inp-spec-gid').value.trim();
-    const d = document.getElementById('inp-dash-gid').value.trim();
-    const err = document.getElementById('setup-error');
-    if (!u || !s || !d) {
-      err.textContent = 'URL과 두 GID를 모두 입력해주세요.';
-      err.style.display = 'block';
-      return;
+  /* ── 시트 검색 ── */
+  document.getElementById('btn-search').addEventListener('click', async () => {
+    const url = document.getElementById('inp-url').value.trim();
+    const errEl = document.getElementById('setup-error');
+    errEl.style.display = 'none';
+
+    if (!url) { showError('URL을 입력해주세요.'); return; }
+
+    const btn = document.getElementById('btn-search');
+    btn.disabled = true;
+    btn.textContent = '검색 중…';
+
+    try {
+      const res  = await fetch('/api/sheets?' + new URLSearchParams({ url }));
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+
+      cachedUrl = url;
+      populateSheetSelects(json.sheets);
+      document.getElementById('sheet-select-area').style.display = 'block';
+    } catch (e) {
+      showError('시트 목록을 불러오지 못했습니다: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '시트 검색';
     }
-    err.style.display = 'none';
-    localStorage.setItem(LS_URL, u);
-    localStorage.setItem(LS_SPEC_GID, s);
-    localStorage.setItem(LS_DASH_GID, d);
-    loadData(u, s, d);
+  });
+
+  function populateSheetSelects(sheets) {
+    const specSel = document.getElementById('sel-spec');
+    const dashSel = document.getElementById('sel-dash');
+    specSel.innerHTML = '';
+    dashSel.innerHTML = '';
+
+    sheets.forEach(s => {
+      const o1 = document.createElement('option');
+      o1.value = s.gid; o1.textContent = s.title;
+      const o2 = o1.cloneNode(true);
+      specSel.appendChild(o1);
+      dashSel.appendChild(o2);
+    });
+
+    // 이름으로 자동 선택
+    const autoSelect = (sel, keywords) => {
+      const opt = [...sel.options].find(o =>
+        keywords.some(k => o.textContent.includes(k))
+      );
+      if (opt) sel.value = opt.value;
+    };
+    autoSelect(specSel, ['스펙표', '스펙', 'spec']);
+    autoSelect(dashSel, ['대시보드', '참여율', 'dashboard']);
+  }
+
+  /* ── 데이터 불러오기 ── */
+  document.getElementById('btn-load').addEventListener('click', () => {
+    const url     = cachedUrl || document.getElementById('inp-url').value.trim();
+    const specGid = document.getElementById('sel-spec').value;
+    const dashGid = document.getElementById('sel-dash').value;
+
+    if (!specGid || !dashGid) { showError('시트를 선택해주세요.'); return; }
+
+    localStorage.setItem(LS_URL,      url);
+    localStorage.setItem(LS_SPEC_GID, specGid);
+    localStorage.setItem(LS_DASH_GID, dashGid);
+    loadData(url, specGid, dashGid);
   });
 
   document.getElementById('btn-change').addEventListener('click', () => showPage('page-setup'));
@@ -241,7 +315,7 @@
   async function loadData(url, specGid, dashGid) {
     showPage('page-main');
     document.getElementById('status-msg').className = '';
-    document.getElementById('status-msg').innerHTML = '<span class="spinner"></span> 시트 데이터 불러오는 중…';
+    document.getElementById('status-msg').innerHTML = '<span class="spinner"></span> 데이터 불러오는 중…';
     document.getElementById('tbl').style.display = 'none';
     document.getElementById('btn-refresh').disabled = true;
 
@@ -267,7 +341,6 @@
     }
   }
 
-  /* ── 클래스 필터 ── */
   function buildClassFilter() {
     const sel = document.getElementById('filter-class');
     const classes = [...new Set(allData.map(m => m['클래스']))].sort();
@@ -275,7 +348,6 @@
     classes.forEach(c => { const o = document.createElement('option'); o.value = o.textContent = c; sel.appendChild(o); });
   }
 
-  /* ── 요약 카드 ── */
   function updateStats() {
     const n = allData.length;
     const rates = allData.map(m => parseFloat(m['총 참여율'])).filter(v => !isNaN(v));
@@ -285,7 +357,6 @@
     document.getElementById('s-total-sum').textContent = allData.reduce((a, m) => a + m['총합'], 0).toLocaleString();
   }
 
-  /* ── 필터 / 정렬 / 렌더 ── */
   function filtered() {
     const q = document.getElementById('search').value.trim().toLowerCase();
     const cls = document.getElementById('filter-class').value;
@@ -311,13 +382,6 @@
     });
   }
 
-  function rateStyle(v) {
-    if (isNaN(v)) return ['rn', 'cn'];
-    if (v >= 80)  return ['rh', 'ch'];
-    if (v >= 50)  return ['rm', 'cm'];
-    return ['rl', 'cl'];
-  }
-
   function render() {
     const rows = sorted(filtered());
     document.getElementById('count').textContent = rows.length + '명 표시 중';
@@ -325,8 +389,8 @@
     tbody.innerHTML = '';
     rows.forEach(m => {
       const rv = parseFloat(m['총 참여율']);
-      const [bc, tc] = rateStyle(rv);
-      const pct = isNaN(rv) ? 0 : rv;
+      const [bc, tc] = rv >= 80 ? ['rh','ch'] : rv >= 50 ? ['rm','cm'] : isNaN(rv) ? ['rn','cn'] : ['rl','cl'];
+      const pct  = isNaN(rv) ? 0 : rv;
       const rtxt = isNaN(rv) ? 'N/A' : rv.toFixed(1) + '%';
       const g = m['등급'] >= 24 ? 'g-high' : m['등급'] >= 22 ? 'g-mid' : 'g-low';
       const tr = document.createElement('tr');
@@ -347,9 +411,8 @@
 
   document.querySelectorAll('thead th[data-col]').forEach(th => {
     th.addEventListener('click', () => {
-      const col = th.dataset.col;
-      sortDir = sortCol === col ? -sortDir : 1;
-      sortCol = col;
+      sortDir = sortCol === th.dataset.col ? -sortDir : 1;
+      sortCol = th.dataset.col;
       document.querySelectorAll('thead th').forEach(t => t.classList.remove('asc', 'desc'));
       th.classList.add(sortDir === 1 ? 'asc' : 'desc');
       render();

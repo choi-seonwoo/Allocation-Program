@@ -1,3 +1,4 @@
+import os
 import re
 import requests
 import csv
@@ -7,6 +8,8 @@ from flask import Flask, render_template, jsonify, request
 
 app = Flask(__name__)
 
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
+
 
 def parse_spreadsheet_id(url: str) -> str:
     match = re.search(r'/spreadsheets/d/([a-zA-Z0-9-_]+)', url)
@@ -15,12 +18,27 @@ def parse_spreadsheet_id(url: str) -> str:
     return match.group(1)
 
 
+def get_sheet_list(spreadsheet_id: str) -> list:
+    """Google Sheets API로 시트 목록 반환 [{title, gid}, ...]"""
+    api_url = (
+        f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}"
+        f"?key={GOOGLE_API_KEY}&fields=sheets.properties(title,sheetId)"
+    )
+    resp = requests.get(api_url, timeout=10)
+    resp.raise_for_status()
+    data = resp.json()
+    return [
+        {"title": s["properties"]["title"], "gid": str(s["properties"]["sheetId"])}
+        for s in data.get("sheets", [])
+    ]
+
+
 def fetch_csv(spreadsheet_id: str, gid: str):
     url = (
         f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}"
         f"/export?format=csv&gid={gid}"
     )
-    resp = requests.get(url, allow_redirects=True, timeout=15)
+    resp = requests.get(url, allow_redirects=True, timeout=30)
     resp.raise_for_status()
     resp.encoding = "utf-8"
     return list(csv.reader(io.StringIO(resp.text)))
@@ -68,11 +86,29 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/api/sheets")
+def get_sheets():
+    """URL로부터 시트 목록 반환"""
+    url = request.args.get("url", "").strip()
+    if not url:
+        return jsonify({"error": "URL을 입력해주세요."}), 400
+    if not GOOGLE_API_KEY:
+        return jsonify({"error": "서버에 API 키가 설정되지 않았습니다."}), 500
+    try:
+        sid = parse_spreadsheet_id(url)
+        sheets = get_sheet_list(sid)
+        return jsonify({"spreadsheet_id": sid, "sheets": sheets})
+    except requests.HTTPError as e:
+        return jsonify({"error": f"시트 목록을 불러오지 못했습니다: {e}"}), 502
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/api/data")
 def get_data():
-    url       = request.args.get("url", "").strip()
-    spec_gid  = request.args.get("spec_gid", "").strip()
-    dash_gid  = request.args.get("dash_gid", "").strip()
+    url      = request.args.get("url", "").strip()
+    spec_gid = request.args.get("spec_gid", "").strip()
+    dash_gid = request.args.get("dash_gid", "").strip()
 
     if not url or not spec_gid or not dash_gid:
         return jsonify({"error": "URL과 GID를 모두 입력해주세요."}), 400
@@ -86,7 +122,7 @@ def get_data():
         spec_rows = fetch_csv(sid, spec_gid)
         dash_rows = fetch_csv(sid, dash_gid)
     except requests.HTTPError as e:
-        return jsonify({"error": f"시트를 불러오지 못했습니다 (공유 설정 확인): {e}"}), 502
+        return jsonify({"error": f"시트를 불러오지 못했습니다: {e}"}), 502
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
