@@ -1,6 +1,4 @@
 import re
-from urllib.parse import urlparse, parse_qs
-
 import requests
 import csv
 import io
@@ -12,30 +10,19 @@ app = Flask(__name__)
 
 # ── URL 파싱 ────────────────────────────────────────────────
 
-def parse_sheets_url(url: str):
-    """Google Sheets URL에서 spreadsheet_id 와 gid 추출"""
+def parse_spreadsheet_id(url: str) -> str:
     match = re.search(r'/spreadsheets/d/([a-zA-Z0-9-_]+)', url)
     if not match:
         raise ValueError("유효한 Google Sheets URL이 아닙니다")
-    spreadsheet_id = match.group(1)
-
-    parsed = urlparse(url)
-    params = parse_qs(parsed.query)
-    if 'gid' in params:
-        gid = params['gid'][0]
-    else:
-        frag = parse_qs(parsed.fragment)
-        gid = frag.get('gid', ['0'])[0]
-
-    return spreadsheet_id, gid
+    return match.group(1)
 
 
-# ── 시트 데이터 ──────────────────────────────────────────────
+# ── 시트 데이터 (시트 이름으로 직접 조회) ──────────────────────
 
-def fetch_csv(spreadsheet_id: str, gid: str):
+def fetch_csv_by_name(spreadsheet_id: str, sheet_name: str):
     url = (
         f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}"
-        f"/export?format=csv&gid={gid}"
+        f"/export?format=csv&sheet={requests.utils.quote(sheet_name)}"
     )
     resp = requests.get(url, allow_redirects=True, timeout=15)
     resp.raise_for_status()
@@ -101,27 +88,24 @@ def index():
 
 @app.route("/api/data")
 def get_data():
-    spec_url  = request.args.get("spec_url", "").strip()
-    dash_url  = request.args.get("dash_url", "").strip()
-
-    if not spec_url or not dash_url:
-        return jsonify({"error": "스펙표와 대시보드 URL을 모두 입력해주세요."}), 400
+    url = request.args.get("url", "").strip()
+    if not url:
+        return jsonify({"error": "스프레드시트 URL을 입력해주세요."}), 400
 
     try:
-        spec_id, spec_gid = parse_sheets_url(spec_url)
-        dash_id, dash_gid = parse_sheets_url(dash_url)
+        spreadsheet_id = parse_spreadsheet_id(url)
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
 
     try:
-        spec_rows = fetch_csv(spec_id, spec_gid)
-        dash_rows = fetch_csv(dash_id, dash_gid)
+        spec_rows = fetch_csv_by_name(spreadsheet_id, "스펙표")
+        dash_rows = fetch_csv_by_name(spreadsheet_id, "대시보드")
     except requests.HTTPError as e:
-        return jsonify({"error": f"시트를 불러오지 못했습니다: {e}"}), 502
+        return jsonify({"error": f"시트를 불러오지 못했습니다 (스프레드시트가 '링크 공유' 상태인지 확인하세요): {e}"}), 502
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-    members      = parse_spec(spec_rows)
+    members       = parse_spec(spec_rows)
     participation = parse_dashboard(dash_rows)
 
     for m in members:

@@ -211,22 +211,16 @@
 <div id="setup-overlay">
   <div id="setup-box">
     <h2>⚔ 결사 멤버 현황</h2>
-    <p>Google Sheets 각 탭의 URL을 붙여넣어 주세요.<br>
+    <p>Google Sheets 주소를 붙여넣으면 <strong>스펙표</strong>와 <strong>대시보드</strong> 시트를 자동으로 불러옵니다.<br>
        시트가 <strong>링크가 있는 사람 누구나 보기</strong> 권한이어야 합니다.</p>
 
     <div id="setup-error"></div>
 
     <div class="form-group">
-      <label>스펙표 시트 URL</label>
-      <input id="inp-spec" type="text"
-        placeholder="https://docs.google.com/spreadsheets/d/.../edit?gid=8154540" />
-      <div class="form-hint">스펙표 탭을 열고 주소창 URL을 복사하세요</div>
-    </div>
-    <div class="form-group">
-      <label>대시보드 시트 URL</label>
-      <input id="inp-dash" type="text"
-        placeholder="https://docs.google.com/spreadsheets/d/.../edit?gid=1988878229" />
-      <div class="form-hint">대시보드 탭을 열고 주소창 URL을 복사하세요</div>
+      <label>스프레드시트 URL</label>
+      <input id="inp-url" type="text"
+        placeholder="https://docs.google.com/spreadsheets/d/.../edit" />
+      <div class="form-hint">어떤 탭이든 상관없이 주소창 URL을 그대로 복사하세요</div>
     </div>
 
     <button id="btn-load">
@@ -316,8 +310,7 @@
 </div>
 
 <script>
-  const LS_SPEC = 'spec_url';
-  const LS_DASH = 'dash_url';
+  const LS_URL = 'sheet_url';
 
   let allData = [];
   let sortCol = 'rank';
@@ -325,30 +318,26 @@
 
   /* ── 초기화: localStorage 에 URL 있으면 바로 로드 ── */
   window.addEventListener('DOMContentLoaded', () => {
-    const savedSpec = localStorage.getItem(LS_SPEC) || '';
-    const savedDash = localStorage.getItem(LS_DASH) || '';
-    if (savedSpec && savedDash) {
-      document.getElementById('inp-spec').value = savedSpec;
-      document.getElementById('inp-dash').value = savedDash;
-      startLoad(savedSpec, savedDash);
+    const saved = localStorage.getItem(LS_URL) || '';
+    if (saved) {
+      document.getElementById('inp-url').value = saved;
+      startLoad(saved);
     }
   });
 
   /* ── 설정 오버레이 ── */
   document.getElementById('btn-load').addEventListener('click', () => {
-    const spec = document.getElementById('inp-spec').value.trim();
-    const dash = document.getElementById('inp-dash').value.trim();
+    const url = document.getElementById('inp-url').value.trim();
     const errEl = document.getElementById('setup-error');
     errEl.style.display = 'none';
 
-    if (!spec || !dash) {
-      errEl.textContent = '두 URL을 모두 입력해주세요.';
+    if (!url) {
+      errEl.textContent = 'URL을 입력해주세요.';
       errEl.style.display = '';
       return;
     }
-    localStorage.setItem(LS_SPEC, spec);
-    localStorage.setItem(LS_DASH, dash);
-    startLoad(spec, dash);
+    localStorage.setItem(LS_URL, url);
+    startLoad(url);
   });
 
   document.getElementById('btn-change').addEventListener('click', () => {
@@ -357,7 +346,7 @@
   });
 
   /* ── 데이터 로드 ── */
-  async function startLoad(specUrl, dashUrl) {
+  async function startLoad(url) {
     document.getElementById('setup-overlay').style.display = 'none';
     document.getElementById('main').style.display = '';
     document.getElementById('tbl-loading').style.display = '';
@@ -365,11 +354,11 @@
     document.getElementById('tbl').style.display         = 'none';
     document.getElementById('btn-refresh').disabled      = true;
 
-    const shortId = specUrl.match(/\/d\/([^/]+)/)?.[1]?.slice(0, 20) + '…';
+    const shortId = url.match(/\/d\/([^/]+)/)?.[1]?.slice(0, 24) + '…';
     document.getElementById('header-url').textContent = shortId || '';
 
     try {
-      const params = new URLSearchParams({ spec_url: specUrl, dash_url: dashUrl });
+      const params = new URLSearchParams({ url });
       const res = await fetch('/api/data?' + params);
       const json = await res.json();
 
@@ -390,9 +379,8 @@
   }
 
   document.getElementById('btn-refresh').addEventListener('click', () => {
-    const spec = localStorage.getItem(LS_SPEC) || '';
-    const dash = localStorage.getItem(LS_DASH) || '';
-    if (spec && dash) startLoad(spec, dash);
+    const url = localStorage.getItem(LS_URL) || '';
+    if (url) startLoad(url);
   });
 
   /* ── 클래스 필터 ── */
