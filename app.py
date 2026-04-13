@@ -5,12 +5,10 @@ import csv
 import io
 
 from flask import Flask, render_template, jsonify, request
-import anthropic
 
 app = Flask(__name__)
 
-GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY", "")
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 
 
 def parse_spreadsheet_id(url: str) -> str:
@@ -138,50 +136,6 @@ def get_data():
         m["총 참여율"] = participation.get(m["아이디"], "N/A")
 
     return jsonify(members)
-
-
-@app.route("/api/ocr", methods=["POST"])
-def ocr_image():
-    if not ANTHROPIC_API_KEY:
-        return jsonify({"error": "ANTHROPIC_API_KEY가 설정되지 않았습니다."}), 500
-
-    data = request.get_json()
-    if not data or "image" not in data:
-        return jsonify({"error": "이미지 데이터가 없습니다."}), 400
-
-    img_data = data["image"]
-    if "," in img_data:
-        header, b64 = img_data.split(",", 1)
-        media_type = header.split(":")[1].split(";")[0]
-    else:
-        b64 = img_data
-        media_type = "image/png"
-
-    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-    message = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=1024,
-        messages=[{
-            "role": "user",
-            "content": [
-                {
-                    "type": "image",
-                    "source": {"type": "base64", "media_type": media_type, "data": b64},
-                },
-                {
-                    "type": "text",
-                    "text": (
-                        "이 이미지에서 게임 닉네임이나 아이디(한글, 영문, 숫자 조합)를 모두 추출해주세요. "
-                        "한 줄에 하나씩만 출력하고, 다른 설명·번호·기호는 쓰지 마세요."
-                    ),
-                },
-            ],
-        }],
-    )
-
-    raw = message.content[0].text
-    names = [ln.strip() for ln in raw.splitlines() if ln.strip()]
-    return jsonify({"names": names})
 
 
 if __name__ == "__main__":

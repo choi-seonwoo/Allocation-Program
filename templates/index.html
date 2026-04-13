@@ -312,6 +312,7 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
   const LS_URL      = 'ap_url';
   const LS_SPEC_GID = 'ap_spec_gid';
@@ -521,7 +522,7 @@
   document.getElementById('filter-class').addEventListener('change', render);
   document.getElementById('filter-rate').addEventListener('change', render);
 
-  /* ══ 이미지 탭 ══ */
+  /* ══ 이미지 탭 (Tesseract.js) ══ */
   const dropZone  = document.getElementById('drop-zone');
   const imgInput  = document.getElementById('img-input');
   const ocrStatus = document.getElementById('ocr-status');
@@ -537,79 +538,118 @@
     if (imgInput.files[0]) processImage(imgInput.files[0]);
   });
 
-  function processImage(file) {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const dataUrl = e.target.result;
-      // 미리보기
-      document.getElementById('img-preview').src = dataUrl;
-      document.getElementById('img-preview-wrap').style.display = 'block';
-      document.getElementById('ocr-result-wrap').style.display = 'none';
-      document.getElementById('ocr-tags').innerHTML = '';
-      document.getElementById('ocr-tbody').innerHTML = '';
+  async function processImage(file) {
+    const dataUrl = await new Promise(res => {
+      const r = new FileReader();
+      r.onload = e => res(e.target.result);
+      r.readAsDataURL(file);
+    });
 
-      ocrStatus.className = '';
-      ocrStatus.innerHTML = '<span class="spinner"></span> 이미지에서 이름 추출 중…';
+    document.getElementById('img-preview').src = dataUrl;
+    document.getElementById('img-preview-wrap').style.display = 'block';
+    document.getElementById('ocr-result-wrap').style.display = 'none';
+    document.getElementById('ocr-tags').innerHTML = '';
+    document.getElementById('ocr-tbody').innerHTML = '';
 
-      try {
-        const res  = await fetch('/api/ocr', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: dataUrl }),
-        });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error);
+    ocrStatus.className = '';
+    ocrStatus.innerHTML = '<span class="spinner"></span> OCR 초기화 중… (첫 실행 시 언어 파일 다운로드로 시간이 걸릴 수 있습니다)';
 
-        const extractedNames = json.names || [];
-        showOcrResult(extractedNames);
-        ocrStatus.textContent = '';
-      } catch (err) {
-        ocrStatus.className = 'error';
-        ocrStatus.textContent = '오류: ' + err.message;
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const worker = await Tesseract.createWorker('kor+eng', 1, {
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            ocrStatus.innerHTML =
+              '<span class="spinner"></span> 텍스트 인식 중… ' +
+              Math.round(m.progress * 100) + '%';
+          } else if (m.status === 'loading language traineddata' || m.status === 'initializing tesseract') {
+            ocrStatus.innerHTML = '<span class="spinner"></span> ' + m.status + '…';
+          }
+        }
+      });
+
+      const { data: { text } } = await worker.recognize(dataUrl);
+      await worker.terminate();
+
+      // OCR 텍스트에서 토큰 추출 후 멤버 ID와 매칭
+      const tokens = text.split(/[\s\n\r|,/\\[\](){}]+/).map(t => t.trim()).filter(t => t.length >= 2);
+      const matched = matchTokensToMembers(tokens);
+      showOcrResult(matched.names, matched.found);
+      ocrStatus.textContent = '';
+    } catch (err) {
+      ocrStatus.className = 'error';
+      ocrStatus.textContent = '오류: ' + err.message;
+    }
   }
 
-  function showOcrResult(names) {
+  function matchTokensToMembers(tokens) {
+    if (!allData.length) return { names: tokens, found: [] };
+
+    // 멤버 ID → 멤버 오브젝트 맵 (소문자 키)
+    const lowerMap = new Map(allData.map(m => [m['아이디'].toLowerCase(), m]));
+    // OCR 전체 텍스트를 이어붙여 substring 검색도 병행
+    const fullText = tokens.join(' ').toLowerCase();
+
+    const foundSet = new Set();
+    const foundMembers = [];
+
+    // 1) 토큰 직접 매칭
+    tokens.forEach(tok => {
+      const key = tok.toLowerCase();
+      if (lowerMap.has(key) && !foundSet.has(key)) {
+        foundSet.add(key);
+        foundMembers.push(lowerMap.get(key));
+      }
+    });
+
+    // 2) 멤버 ID가 fullText에 포함되는지 substring 검색 (짧은 ID 오탐 방지: 3자 이상)
+    lowerMap.forEach((member, key) => {
+      if (key.length >= 3 && !foundSet.has(key) && fullText.includes(key)) {
+        foundSet.add(key);
+        foundMembers.push(member);
+      }
+    });
+
+    return { names: tokens, found: foundMembers };
+  }
+
+  // names: OCR 토큰 배열, found: 매칭된 멤버 객체 배열
+  function showOcrResult(names, found) {
     if (!allData.length) {
       ocrStatus.className = 'error';
       ocrStatus.textContent = '멤버 데이터를 먼저 불러와야 합니다.';
       return;
     }
 
-    // 이름 매칭 (대소문자 무시)
-    const matched   = [];
-    const notFound  = [];
-    const lowerMap  = new Map(allData.map(m => [m['아이디'].toLowerCase(), m]));
-
-    names.forEach(name => {
-      const m = lowerMap.get(name.toLowerCase());
-      if (m) matched.push(m);
-      else notFound.push(name);
-    });
-
     // 총합 내림차순
-    matched.sort((a, b) => b['총합'] - a['총합']);
+    const sorted = [...found].sort((a, b) => b['총합'] - a['총합']);
+    const foundIds = new Set(found.map(m => m['아이디'].toLowerCase()));
 
-    // 태그 표시
+    // 태그: 매칭된 ID만 표시 (found=초록, 나머지 토큰은 미표시)
     const tagsEl = document.getElementById('ocr-tags');
     tagsEl.innerHTML = '';
-    names.forEach(name => {
-      const found = lowerMap.has(name.toLowerCase());
+    // 매칭된 멤버 태그
+    sorted.forEach(m => {
       const span = document.createElement('span');
-      span.className = 'ocr-tag ' + (found ? 'found' : 'notfound');
-      span.textContent = name;
+      span.className = 'ocr-tag found';
+      span.textContent = m['아이디'];
+      tagsEl.appendChild(span);
+    });
+    // OCR은 됐지만 멤버 목록에 없는 토큰 (3자 이상만)
+    const lowerIds = new Set(allData.map(m => m['아이디'].toLowerCase()));
+    names.filter(n => n.length >= 2 && !lowerIds.has(n.toLowerCase())).forEach(n => {
+      const span = document.createElement('span');
+      span.className = 'ocr-tag notfound';
+      span.textContent = n;
       tagsEl.appendChild(span);
     });
 
     // 결과 테이블
     const tbody = document.getElementById('ocr-tbody');
     tbody.innerHTML = '';
-    matched.forEach((m, i) => tbody.appendChild(makeRow(m, i + 1)));
+    sorted.forEach((m, i) => tbody.appendChild(makeRow(m, i + 1)));
 
     document.getElementById('ocr-match-count').textContent =
-      `추출 ${names.length}명 중 ${matched.length}명 매칭`;
+      `${found.length}명 매칭됨 (총합 내림차순)`;
     document.getElementById('ocr-result-wrap').style.display = 'block';
   }
 </script>
