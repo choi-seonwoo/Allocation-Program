@@ -9,8 +9,7 @@ dist/
 build/
 .eggs/
 
-# 가상환경
-venv/
+# 가상환경 (로컬만 제외, Render용 venv는 빌드 시 생성)
 env/
 .env
 .venv

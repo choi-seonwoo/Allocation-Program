@@ -3,5 +3,5 @@ services:
     name: allocation-program
     runtime: python
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: bash start.sh
+    buildCommand: python3 -m venv venv && venv/bin/pip install -r requirements.txt
+    startCommand: venv/bin/gunicorn app:app
