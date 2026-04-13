@@ -13,6 +13,7 @@
     #page-setup { min-height: 100vh; display: none; align-items: center; justify-content: center; }
     #page-setup.active { display: flex; }
 
+    /* ── 설정 박스 ── */
     .setup-box {
       background: #1a1f2e; border: 1px solid #2d3748; border-radius: 14px;
       padding: 36px 40px; width: 100%; max-width: 520px;
@@ -32,10 +33,8 @@
     .form-hint { font-size: 0.72rem; color: #4a5568; margin-top: 4px; }
     .form-row { display: flex; gap: 12px; }
     .form-row .form-group { flex: 1; }
-
     #setup-error { background: #2d1515; border: 1px solid #822; border-radius: 6px; color: #fc8181; font-size: 0.82rem; padding: 10px 14px; margin-bottom: 14px; display: none; }
 
-    /* URL 입력 + 버튼 한 줄 */
     .url-row { display: flex; gap: 8px; margin-bottom: 4px; }
     .url-row input { flex: 1; background: #0f1117; border: 1px solid #2d3748; border-radius: 8px; color: #e2e8f0; font-size: 0.85rem; padding: 10px 14px; outline: none; transition: border-color 0.2s; }
     .url-row input:focus { border-color: #e2b96f; }
@@ -43,27 +42,34 @@
     .btn-search { background: #2d3748; border: none; border-radius: 8px; color: #a0aec0; font-size: 0.82rem; padding: 10px 14px; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
     .btn-search:hover { background: #3d4a5c; color: #e2e8f0; }
     .btn-search:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    /* 시트 선택 영역 */
     #sheet-select-area { display: none; margin-top: 8px; }
-
     .btn-primary { width: 100%; background: #e2b96f; border: none; border-radius: 8px; color: #0f1117; font-size: 0.9rem; font-weight: 700; padding: 12px; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; }
     .btn-primary:hover { background: #f0c97a; }
     .btn-primary:disabled { background: #4a5568; color: #718096; cursor: not-allowed; }
 
-    /* 메인 */
+    /* ── 헤더 ── */
     header { background: linear-gradient(135deg, #1a1f2e, #16213e); border-bottom: 1px solid #2d3748; padding: 16px 32px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     header h1 { font-size: 1.25rem; font-weight: 700; color: #e2b96f; }
     #header-url { font-size: 0.7rem; color: #4a5568; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .btn-sm { background: transparent; border: 1px solid #2d3748; border-radius: 6px; color: #718096; font-size: 0.78rem; padding: 5px 12px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
     .btn-sm:hover { border-color: #e2b96f; color: #e2b96f; }
 
+    /* ── 탭 ── */
+    .tab-bar { display: flex; gap: 4px; padding: 16px 32px 0; border-bottom: 1px solid #2d3748; }
+    .tab-btn { background: none; border: none; border-bottom: 2px solid transparent; color: #718096; font-size: 0.88rem; font-weight: 600; padding: 8px 16px; cursor: pointer; transition: all 0.18s; margin-bottom: -1px; }
+    .tab-btn:hover { color: #a0aec0; }
+    .tab-btn.active { color: #e2b96f; border-bottom-color: #e2b96f; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── 통계 카드 ── */
     .stats { display: flex; gap: 14px; padding: 20px 32px 0; flex-wrap: wrap; }
     .card { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 10px; padding: 14px 20px; min-width: 130px; flex: 1; }
     .card .label { font-size: 0.68rem; color: #718096; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
     .card .value { font-size: 1.4rem; font-weight: 700; color: #e2b96f; }
     .card .sub   { font-size: 0.7rem; color: #4a5568; }
 
+    /* ── 툴바 ── */
     .toolbar { display: flex; gap: 10px; padding: 16px 32px; align-items: center; flex-wrap: wrap; }
     .search-wrap { position: relative; flex: 1; min-width: 160px; max-width: 300px; }
     .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #4a5568; pointer-events: none; }
@@ -76,6 +82,7 @@
     #btn-refresh:hover { background: #f0c97a; }
     #btn-refresh:disabled { background: #4a5568; color: #718096; cursor: not-allowed; }
 
+    /* ── 테이블 ── */
     .table-wrap { padding: 0 32px 40px; overflow-x: auto; }
     #status-msg { text-align: center; padding: 50px; font-size: 0.9rem; color: #718096; }
     #status-msg.error { color: #fc8181; }
@@ -83,16 +90,30 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     table { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
-    thead th { background: #1a1f2e; color: #718096; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 11px 14px; text-align: left; border-bottom: 1px solid #2d3748; white-space: nowrap; cursor: pointer; user-select: none; }
+    thead th {
+      background: #1a1f2e; color: #718096; font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 11px 14px; border-bottom: 1px solid #2d3748;
+      white-space: nowrap; cursor: pointer; user-select: none;
+    }
     thead th:hover { color: #e2b96f; }
     thead th.asc::after  { content: ' ▲'; color: #e2b96f; }
     thead th.desc::after { content: ' ▼'; color: #e2b96f; }
+    /* 컬럼 정렬 */
+    th.col-rank, td.col-rank   { width: 50px;  text-align: center; }
+    th.col-id,   td.col-id     { min-width: 100px; text-align: left; }
+    th.col-cls,  td.col-cls    { min-width: 110px; text-align: left; }
+    th.col-grade,td.col-grade  { width: 70px;  text-align: center; }
+    th.col-power,td.col-power  { width: 110px; text-align: right; }
+    th.col-sum,  td.col-sum    { width: 110px; text-align: right; }
+    th.col-rate, td.col-rate   { min-width: 180px; text-align: left; }
+
     tbody tr { border-bottom: 1px solid #1e2435; transition: background 0.12s; }
     tbody tr:hover { background: #1a1f2e; }
     td { padding: 10px 14px; white-space: nowrap; }
-    td.num  { text-align: right; color: #a0aec0; font-variant-numeric: tabular-nums; }
-    td.rank { text-align: center; color: #4a5568; font-size: 0.78rem; }
-    td.id   { font-weight: 600; }
+    td.col-id   { font-weight: 600; }
+    td.col-power, td.col-sum { color: #a0aec0; font-variant-numeric: tabular-nums; }
+    td.col-rank { color: #4a5568; font-size: 0.78rem; }
     .grade { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; min-width: 28px; text-align: center; }
     .g-high { background: #2d4a22; color: #68d391; }
     .g-mid  { background: #2a3a1a; color: #9ae66e; }
@@ -106,6 +127,33 @@
     .rm { background: #ed8936; } .cm { color: #f6ad55; }
     .rl { background: #fc8181; } .cl { color: #fc8181; }
     .rn { background: #4a5568; } .cn { color: #4a5568; }
+
+    /* ── 이미지 탭 ── */
+    .img-panel { padding: 24px 32px 40px; }
+    .drop-zone {
+      border: 2px dashed #2d3748; border-radius: 12px; padding: 48px 24px;
+      text-align: center; cursor: pointer; transition: all 0.2s;
+      background: #1a1f2e; color: #4a5568; font-size: 0.88rem; position: relative;
+    }
+    .drop-zone:hover, .drop-zone.drag-over { border-color: #e2b96f; color: #a0aec0; background: #1e2535; }
+    .drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .drop-zone svg { display: block; margin: 0 auto 12px; }
+    .drop-zone p { margin: 0; }
+    .drop-zone .hint { font-size: 0.75rem; margin-top: 6px; color: #4a5568; }
+
+    #img-preview-wrap { margin-top: 16px; display: none; }
+    #img-preview { max-width: 100%; max-height: 320px; border-radius: 8px; border: 1px solid #2d3748; }
+
+    #ocr-status { margin-top: 14px; font-size: 0.85rem; color: #718096; min-height: 24px; }
+    #ocr-status.error { color: #fc8181; }
+
+    #ocr-result-wrap { margin-top: 20px; display: none; }
+    .ocr-result-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+    .ocr-result-header h3 { font-size: 0.9rem; font-weight: 700; color: #e2b96f; }
+    .ocr-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+    .ocr-tag { padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .ocr-tag.found    { background: #1e3a2a; color: #68d391; border: 1px solid #2a5a3a; }
+    .ocr-tag.notfound { background: #2d2020; color: #fc8181; border: 1px solid #5a2a2a; cursor: default; text-decoration: line-through; opacity: 0.6; }
   </style>
 </head>
 <body>
@@ -158,6 +206,7 @@
     <button class="btn-sm" id="btn-change">시트 변경</button>
   </header>
 
+  <!-- 통계 -->
   <div class="stats">
     <div class="card"><div class="label">전체 인원</div><div class="value" id="s-total">—</div><div class="sub">명</div></div>
     <div class="card"><div class="label">평균 참여율</div><div class="value" id="s-avg-rate">—</div><div class="sub">%</div></div>
@@ -165,46 +214,101 @@
     <div class="card"><div class="label">총합 합계</div><div class="value" id="s-total-sum">—</div><div class="sub">포인트</div></div>
   </div>
 
-  <div class="toolbar">
-    <div class="search-wrap">
-      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-      </svg>
-      <input id="search" type="text" placeholder="아이디 검색…" />
-    </div>
-    <select id="filter-class"><option value="">전체 클래스</option></select>
-    <select id="filter-rate">
-      <option value="">전체 참여율</option>
-      <option value="high">80% 이상</option>
-      <option value="mid">50 ~ 80%</option>
-      <option value="low">50% 미만</option>
-    </select>
-    <span id="count"></span>
-    <button id="btn-refresh">
-      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-        <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
-        <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
-      </svg>
-      새로고침
-    </button>
+  <!-- 탭 바 -->
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="tab-list">멤버 목록</button>
+    <button class="tab-btn" data-tab="tab-image">이미지 검색</button>
   </div>
 
-  <div class="table-wrap">
-    <div id="status-msg"></div>
-    <table id="tbl" style="display:none">
-      <thead>
-        <tr>
-          <th data-col="rank" class="asc">#</th>
-          <th data-col="아이디">아이디</th>
-          <th data-col="클래스">클래스</th>
-          <th data-col="등급">등급</th>
-          <th data-col="투력">투력</th>
-          <th data-col="총합">총합</th>
-          <th data-col="총 참여율">총 참여율</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
+  <!-- 탭: 멤버 목록 -->
+  <div id="tab-list" class="tab-panel active">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input id="search" type="text" placeholder="아이디 검색…" />
+      </div>
+      <select id="filter-class"><option value="">전체 클래스</option></select>
+      <select id="filter-rate">
+        <option value="">전체 참여율</option>
+        <option value="high">80% 이상</option>
+        <option value="mid">50 ~ 80%</option>
+        <option value="low">50% 미만</option>
+      </select>
+      <span id="count"></span>
+      <button id="btn-refresh">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+          <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+        </svg>
+        새로고침
+      </button>
+    </div>
+
+    <div class="table-wrap">
+      <div id="status-msg"></div>
+      <table id="tbl" style="display:none">
+        <thead>
+          <tr>
+            <th class="col-rank" data-col="rank">#</th>
+            <th class="col-id"   data-col="아이디">아이디</th>
+            <th class="col-cls"  data-col="클래스">클래스</th>
+            <th class="col-grade"data-col="등급">등급</th>
+            <th class="col-power"data-col="투력">투력</th>
+            <th class="col-sum"  data-col="총합">총합</th>
+            <th class="col-rate" data-col="총 참여율">총 참여율</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 탭: 이미지 검색 -->
+  <div id="tab-image" class="tab-panel">
+    <div class="img-panel">
+      <div class="drop-zone" id="drop-zone">
+        <input type="file" id="img-input" accept="image/*" />
+        <svg width="36" height="36" fill="none" stroke="#4a5568" stroke-width="1.5" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        <p>이미지를 드래그하거나 클릭해서 업로드</p>
+        <p class="hint">참여자 이름이 담긴 스크린샷을 올리면 멤버 목록에서 찾아 총합 순으로 정렬합니다</p>
+      </div>
+
+      <div id="img-preview-wrap">
+        <img id="img-preview" src="" alt="미리보기" />
+      </div>
+
+      <div id="ocr-status"></div>
+
+      <div id="ocr-result-wrap">
+        <div class="ocr-result-header">
+          <h3>검색 결과</h3>
+          <span id="ocr-match-count" style="font-size:0.78rem;color:#718096;"></span>
+        </div>
+        <div id="ocr-tags" class="ocr-tags"></div>
+        <div class="table-wrap" style="padding:0;">
+          <table id="ocr-tbl">
+            <thead>
+              <tr>
+                <th class="col-rank">#</th>
+                <th class="col-id">아이디</th>
+                <th class="col-cls">클래스</th>
+                <th class="col-grade">등급</th>
+                <th class="col-power">투력</th>
+                <th class="col-sum">총합</th>
+                <th class="col-rate">총 참여율</th>
+              </tr>
+            </thead>
+            <tbody id="ocr-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -227,7 +331,17 @@
     el.style.display = 'block';
   }
 
-  /* ── 초기화: 저장된 설정 있으면 자동 로드 ── */
+  /* ── 탭 전환 ── */
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  /* ── 초기화 ── */
   window.addEventListener('DOMContentLoaded', () => {
     const u = localStorage.getItem(LS_URL)      || '';
     const s = localStorage.getItem(LS_SPEC_GID) || '';
@@ -241,48 +355,35 @@
     const url = document.getElementById('inp-url').value.trim();
     const errEl = document.getElementById('setup-error');
     errEl.style.display = 'none';
-
     if (!url) { showError('URL을 입력해주세요.'); return; }
-
     const btn = document.getElementById('btn-search');
-    btn.disabled = true;
-    btn.textContent = '검색 중…';
-
+    btn.disabled = true; btn.textContent = '검색 중…';
     try {
       const res  = await fetch('/api/sheets?' + new URLSearchParams({ url }));
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
-
       cachedUrl = url;
       populateSheetSelects(json.sheets);
       document.getElementById('sheet-select-area').style.display = 'block';
     } catch (e) {
       showError('시트 목록을 불러오지 못했습니다: ' + e.message);
     } finally {
-      btn.disabled = false;
-      btn.textContent = '시트 검색';
+      btn.disabled = false; btn.textContent = '시트 검색';
     }
   });
 
   function populateSheetSelects(sheets) {
     const specSel = document.getElementById('sel-spec');
     const dashSel = document.getElementById('sel-dash');
-    specSel.innerHTML = '';
-    dashSel.innerHTML = '';
-
+    specSel.innerHTML = ''; dashSel.innerHTML = '';
     sheets.forEach(s => {
       const o1 = document.createElement('option');
       o1.value = s.gid; o1.textContent = s.title;
       const o2 = o1.cloneNode(true);
-      specSel.appendChild(o1);
-      dashSel.appendChild(o2);
+      specSel.appendChild(o1); dashSel.appendChild(o2);
     });
-
-    // 이름으로 자동 선택
     const autoSelect = (sel, keywords) => {
-      const opt = [...sel.options].find(o =>
-        keywords.some(k => o.textContent.includes(k))
-      );
+      const opt = [...sel.options].find(o => keywords.some(k => o.textContent.includes(k)));
       if (opt) sel.value = opt.value;
     };
     autoSelect(specSel, ['스펙표', '스펙', 'spec']);
@@ -294,10 +395,8 @@
     const url     = cachedUrl || document.getElementById('inp-url').value.trim();
     const specGid = document.getElementById('sel-spec').value;
     const dashGid = document.getElementById('sel-dash').value;
-
     if (!specGid || !dashGid) { showError('시트를 선택해주세요.'); return; }
-
-    localStorage.setItem(LS_URL,      url);
+    localStorage.setItem(LS_URL, url);
     localStorage.setItem(LS_SPEC_GID, specGid);
     localStorage.setItem(LS_DASH_GID, dashGid);
     loadData(url, specGid, dashGid);
@@ -318,15 +417,12 @@
     document.getElementById('status-msg').innerHTML = '<span class="spinner"></span> 데이터 불러오는 중…';
     document.getElementById('tbl').style.display = 'none';
     document.getElementById('btn-refresh').disabled = true;
-
     const shortId = (url.match(/\/d\/([^/?#]+)/)?.[1] || '').slice(0, 28);
     document.getElementById('header-url').textContent = shortId ? shortId + '…' : '';
-
     try {
       const res  = await fetch('/api/data?' + new URLSearchParams({ url, spec_gid: specGid, dash_gid: dashGid }));
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || '서버 오류');
-
       allData = json.map((m, i) => ({ ...m, rank: i + 1 }));
       buildClassFilter();
       updateStats();
@@ -358,7 +454,7 @@
   }
 
   function filtered() {
-    const q = document.getElementById('search').value.trim().toLowerCase();
+    const q   = document.getElementById('search').value.trim().toLowerCase();
     const cls = document.getElementById('filter-class').value;
     const rate = document.getElementById('filter-rate').value;
     return allData.filter(m => {
@@ -382,38 +478,40 @@
     });
   }
 
+  function makeRow(m, rank) {
+    const rv = parseFloat(m['총 참여율']);
+    const [bc, tc] = rv >= 80 ? ['rh','ch'] : rv >= 50 ? ['rm','cm'] : isNaN(rv) ? ['rn','cn'] : ['rl','cl'];
+    const pct  = isNaN(rv) ? 0 : rv;
+    const rtxt = isNaN(rv) ? 'N/A' : rv.toFixed(1) + '%';
+    const g    = m['등급'] >= 24 ? 'g-high' : m['등급'] >= 22 ? 'g-mid' : 'g-low';
+    const tr   = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="col-rank">${rank}</td>
+      <td class="col-id">${m['아이디']}</td>
+      <td class="col-cls"><span class="cls-tag">${m['클래스']}</span></td>
+      <td class="col-grade"><span class="grade ${g}">${m['등급']}</span></td>
+      <td class="col-power">${m['투력'].toLocaleString()}</td>
+      <td class="col-sum">${m['총합'].toLocaleString()}</td>
+      <td class="col-rate"><div class="rate-cell">
+        <div class="rate-bar"><div class="rate-fill ${bc}" style="width:${pct}%"></div></div>
+        <span class="rate-text ${tc}">${rtxt}</span>
+      </div></td>`;
+    return tr;
+  }
+
   function render() {
     const rows = sorted(filtered());
     document.getElementById('count').textContent = rows.length + '명 표시 중';
     const tbody = document.getElementById('tbody');
     tbody.innerHTML = '';
-    rows.forEach(m => {
-      const rv = parseFloat(m['총 참여율']);
-      const [bc, tc] = rv >= 80 ? ['rh','ch'] : rv >= 50 ? ['rm','cm'] : isNaN(rv) ? ['rn','cn'] : ['rl','cl'];
-      const pct  = isNaN(rv) ? 0 : rv;
-      const rtxt = isNaN(rv) ? 'N/A' : rv.toFixed(1) + '%';
-      const g = m['등급'] >= 24 ? 'g-high' : m['등급'] >= 22 ? 'g-mid' : 'g-low';
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="rank">${m.rank}</td>
-        <td class="id">${m['아이디']}</td>
-        <td><span class="cls-tag">${m['클래스']}</span></td>
-        <td><span class="grade ${g}">${m['등급']}</span></td>
-        <td class="num">${m['투력'].toLocaleString()}</td>
-        <td class="num">${m['총합'].toLocaleString()}</td>
-        <td><div class="rate-cell">
-          <div class="rate-bar"><div class="rate-fill ${bc}" style="width:${pct}%"></div></div>
-          <span class="rate-text ${tc}">${rtxt}</span>
-        </div></td>`;
-      tbody.appendChild(tr);
-    });
+    rows.forEach(m => tbody.appendChild(makeRow(m, m.rank)));
   }
 
-  document.querySelectorAll('thead th[data-col]').forEach(th => {
+  document.querySelectorAll('#tbl thead th[data-col]').forEach(th => {
     th.addEventListener('click', () => {
       sortDir = sortCol === th.dataset.col ? -sortDir : 1;
       sortCol = th.dataset.col;
-      document.querySelectorAll('thead th').forEach(t => t.classList.remove('asc', 'desc'));
+      document.querySelectorAll('#tbl thead th').forEach(t => t.classList.remove('asc', 'desc'));
       th.classList.add(sortDir === 1 ? 'asc' : 'desc');
       render();
     });
@@ -422,6 +520,98 @@
   document.getElementById('search').addEventListener('input', render);
   document.getElementById('filter-class').addEventListener('change', render);
   document.getElementById('filter-rate').addEventListener('change', render);
+
+  /* ══ 이미지 탭 ══ */
+  const dropZone  = document.getElementById('drop-zone');
+  const imgInput  = document.getElementById('img-input');
+  const ocrStatus = document.getElementById('ocr-status');
+
+  dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', ()  => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) processImage(file);
+  });
+  imgInput.addEventListener('change', () => {
+    if (imgInput.files[0]) processImage(imgInput.files[0]);
+  });
+
+  function processImage(file) {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const dataUrl = e.target.result;
+      // 미리보기
+      document.getElementById('img-preview').src = dataUrl;
+      document.getElementById('img-preview-wrap').style.display = 'block';
+      document.getElementById('ocr-result-wrap').style.display = 'none';
+      document.getElementById('ocr-tags').innerHTML = '';
+      document.getElementById('ocr-tbody').innerHTML = '';
+
+      ocrStatus.className = '';
+      ocrStatus.innerHTML = '<span class="spinner"></span> 이미지에서 이름 추출 중…';
+
+      try {
+        const res  = await fetch('/api/ocr', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: dataUrl }),
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error);
+
+        const extractedNames = json.names || [];
+        showOcrResult(extractedNames);
+        ocrStatus.textContent = '';
+      } catch (err) {
+        ocrStatus.className = 'error';
+        ocrStatus.textContent = '오류: ' + err.message;
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function showOcrResult(names) {
+    if (!allData.length) {
+      ocrStatus.className = 'error';
+      ocrStatus.textContent = '멤버 데이터를 먼저 불러와야 합니다.';
+      return;
+    }
+
+    // 이름 매칭 (대소문자 무시)
+    const matched   = [];
+    const notFound  = [];
+    const lowerMap  = new Map(allData.map(m => [m['아이디'].toLowerCase(), m]));
+
+    names.forEach(name => {
+      const m = lowerMap.get(name.toLowerCase());
+      if (m) matched.push(m);
+      else notFound.push(name);
+    });
+
+    // 총합 내림차순
+    matched.sort((a, b) => b['총합'] - a['총합']);
+
+    // 태그 표시
+    const tagsEl = document.getElementById('ocr-tags');
+    tagsEl.innerHTML = '';
+    names.forEach(name => {
+      const found = lowerMap.has(name.toLowerCase());
+      const span = document.createElement('span');
+      span.className = 'ocr-tag ' + (found ? 'found' : 'notfound');
+      span.textContent = name;
+      tagsEl.appendChild(span);
+    });
+
+    // 결과 테이블
+    const tbody = document.getElementById('ocr-tbody');
+    tbody.innerHTML = '';
+    matched.forEach((m, i) => tbody.appendChild(makeRow(m, i + 1)));
+
+    document.getElementById('ocr-match-count').textContent =
+      `추출 ${names.length}명 중 ${matched.length}명 매칭`;
+    document.getElementById('ocr-result-wrap').style.display = 'block';
+  }
 </script>
 </body>
 </html>
