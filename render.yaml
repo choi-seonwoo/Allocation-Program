@@ -4,4 +4,4 @@ services:
     runtime: python
     plan: free
     buildCommand: python3 -m venv venv && venv/bin/pip install -r requirements.txt
-    startCommand: venv/bin/gunicorn app:app
+    startCommand: venv/bin/gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120 --workers 1
