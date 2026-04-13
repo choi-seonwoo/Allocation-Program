@@ -621,50 +621,72 @@
     }
   }
 
+  /* 레벤슈타인 거리 (편집 거리) */
+  function levenshtein(a, b) {
+    const m = a.length, n = b.length;
+    const dp = Array.from({length: m + 1}, (_, i) =>
+      Array.from({length: n + 1}, (_, j) => i === 0 ? j : j === 0 ? i : 0)
+    );
+    for (let i = 1; i <= m; i++)
+      for (let j = 1; j <= n; j++)
+        dp[i][j] = a[i-1] === b[j-1]
+          ? dp[i-1][j-1]
+          : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+    return dp[m][n];
+  }
+
+  /* OCR 텍스트 → 멤버 매칭 */
   function matchTokensToMembers(rawText) {
     if (!allData.length) return { lines: [], found: [] };
 
     const lowerMap = new Map(allData.map(m => [m['아이디'].toLowerCase(), m]));
-    const foundSet = new Set();
+    const foundSet  = new Set();
     const foundMembers = [];
     const displayLines = [];
 
-    // 줄별로 처리: "진빼이/89/신궁" → 슬래시·공백 앞 첫 단어 우선 시도
+    // 줄별 처리: "진빼이/89/신궁" → 슬래시·공백 앞 세그먼트들 추출
     const lines = rawText.split(/\n/).map(l => l.trim()).filter(l => l.length >= 2);
-
+    // 모든 세그먼트 수집 (줄별 + 전체 토큰)
+    const allSegments = [];
     lines.forEach(line => {
-      // 슬래시·공백으로 구분된 첫 세그먼트들을 순서대로 시도
-      const segments = line.split(/[/\s|,]+/).map(s => s.trim()).filter(s => s.length >= 2);
-      let matched = false;
-      for (const seg of segments) {
-        const key = seg.toLowerCase();
-        if (lowerMap.has(key) && !foundSet.has(key)) {
-          foundSet.add(key);
-          foundMembers.push(lowerMap.get(key));
-          displayLines.push(seg);
-          matched = true;
-          break;
-        }
-      }
-      // 직접 매칭 실패 시 멤버 ID가 줄 안에 포함되는지 substring 검색
-      if (!matched) {
-        const lineLower = line.toLowerCase();
-        lowerMap.forEach((member, key) => {
-          if (key.length >= 2 && !foundSet.has(key) && lineLower.includes(key)) {
-            foundSet.add(key);
-            foundMembers.push(member);
-            displayLines.push(member['아이디']);
-          }
-        });
+      const segs = line.split(/[/\s|,《》「」『』【】〔〕·•…\-_]+/).map(s => s.trim()).filter(s => s.length >= 2);
+      allSegments.push(...segs);
+    });
+    // 중복 제거
+    const uniqueSegs = [...new Set(allSegments)];
+
+    // 1단계: 정확 매칭
+    uniqueSegs.forEach(seg => {
+      const key = seg.toLowerCase();
+      if (lowerMap.has(key) && !foundSet.has(key)) {
+        foundSet.add(key);
+        foundMembers.push(lowerMap.get(key));
+        displayLines.push(seg);
       }
     });
 
-    // 줄에서 못 찾은 경우 전체 텍스트 substring 검색 (보완)
+    // 2단계: substring 매칭 (3자 이상 멤버 ID)
     const fullLower = rawText.toLowerCase();
     lowerMap.forEach((member, key) => {
       if (key.length >= 3 && !foundSet.has(key) && fullLower.includes(key)) {
         foundSet.add(key);
         foundMembers.push(member);
+        displayLines.push(member['아이디']);
+      }
+    });
+
+    // 3단계: fuzzy 매칭 — OCR 오인식 허용 (편집거리 ≤ 1)
+    lowerMap.forEach((member, key) => {
+      if (foundSet.has(key)) return;
+      const threshold = key.length <= 2 ? 0 : 1; // 2자 이하는 exact만
+      for (const seg of uniqueSegs) {
+        if (Math.abs(seg.length - key.length) <= threshold &&
+            levenshtein(seg.toLowerCase(), key) <= threshold) {
+          foundSet.add(key);
+          foundMembers.push(member);
+          displayLines.push(member['아이디'] + ' ≈');
+          break;
+        }
       }
     });
 
