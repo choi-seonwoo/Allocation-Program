@@ -177,6 +177,77 @@
     th.col-alloc-eligible, td.col-alloc-eligible { width: 80px; text-align: center; }
     .eligible-yes { color: #68d391; font-weight: 700; font-size: 0.82rem; }
     .eligible-no  { color: #fc8181; font-size: 0.78rem; opacity: 0.6; }
+
+    /* ── 분배 설정 탭 ── */
+    .alloc-settings-panel { padding: 24px 32px 48px; max-width: 680px; }
+    .alloc-settings-panel h3 { font-size: 0.9rem; font-weight: 700; color: #e2b96f; margin-bottom: 4px; }
+    .alloc-settings-panel .desc { font-size: 0.78rem; color: #4a5568; margin-bottom: 20px; }
+
+    .alloc-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    .alloc-row {
+      display: grid; grid-template-columns: 1fr 110px 110px auto;
+      gap: 8px; align-items: center;
+      background: #1a1f2e; border: 1px solid #2d3748; border-radius: 10px;
+      padding: 10px 14px; transition: border-color 0.2s;
+    }
+    .alloc-row:hover { border-color: #3d4a5c; }
+    .alloc-row.editing { border-color: #e2b96f; }
+    .alloc-row-view { display: contents; }
+    .alloc-row-edit { display: contents; }
+
+    .alloc-row .item-name { font-size: 0.87rem; font-weight: 600; color: #e2e8f0; grid-column: 1 / span 3; }
+    .alloc-row .item-meta { font-size: 0.75rem; color: #718096; }
+    .alloc-row .item-badge {
+      display: inline-block; font-size: 0.65rem; font-weight: 700;
+      padding: 1px 6px; border-radius: 3px; background: rgba(255,255,255,0.07);
+      color: #a0aec0; margin-left: 6px; vertical-align: middle;
+    }
+    .alloc-row input {
+      background: #0f1117; border: 1px solid #2d3748; border-radius: 6px;
+      color: #e2e8f0; font-size: 0.82rem; padding: 6px 10px; outline: none;
+      width: 100%; transition: border-color 0.2s;
+    }
+    .alloc-row input:focus { border-color: #e2b96f; }
+    .alloc-row input::placeholder { color: #4a5568; }
+    .alloc-row-actions { display: flex; gap: 6px; }
+    .btn-icon {
+      background: transparent; border: 1px solid #2d3748; border-radius: 6px;
+      color: #718096; font-size: 0.72rem; padding: 5px 10px; cursor: pointer;
+      transition: all 0.18s; white-space: nowrap;
+    }
+    .btn-icon:hover { border-color: #a0aec0; color: #e2e8f0; }
+    .btn-icon.del:hover { border-color: #fc8181; color: #fc8181; }
+    .btn-icon.save { border-color: #68d391; color: #68d391; }
+    .btn-icon.save:hover { background: #1e3a2a; }
+
+    .alloc-add-box {
+      background: #1a1f2e; border: 1px dashed #3d4a5c; border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .alloc-add-box .add-title { font-size: 0.75rem; font-weight: 600; color: #718096; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .alloc-add-row { display: grid; grid-template-columns: 1fr 110px 110px auto; gap: 8px; align-items: center; }
+    .alloc-add-row input {
+      background: #0f1117; border: 1px solid #2d3748; border-radius: 6px;
+      color: #e2e8f0; font-size: 0.82rem; padding: 7px 10px; outline: none;
+      width: 100%; transition: border-color 0.2s;
+    }
+    .alloc-add-row input:focus { border-color: #e2b96f; }
+    .alloc-add-row input::placeholder { color: #4a5568; font-size: 0.78rem; }
+    .btn-add-item {
+      background: #e2b96f; border: none; border-radius: 6px;
+      color: #0f1117; font-size: 0.82rem; font-weight: 700;
+      padding: 7px 14px; cursor: pointer; white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .btn-add-item:hover { background: #f0c97a; }
+    .alloc-add-hint { font-size: 0.7rem; color: #4a5568; margin-top: 8px; }
+    .alloc-reset-row { margin-top: 16px; text-align: right; }
+    .btn-reset { background: transparent; border: 1px solid #4a5568; border-radius: 6px; color: #4a5568; font-size: 0.75rem; padding: 5px 12px; cursor: pointer; transition: all 0.18s; }
+    .btn-reset:hover { border-color: #fc8181; color: #fc8181; }
+
+    .col-name-header  { font-size: 0.68rem; color: #4a5568; }
+    .alloc-col-labels { display: grid; grid-template-columns: 1fr 110px 110px auto; gap: 8px; padding: 0 14px; margin-bottom: 6px; }
+    .alloc-col-labels span { font-size: 0.65rem; color: #4a5568; text-transform: uppercase; letter-spacing: 0.06em; }
   </style>
 </head>
 <body>
@@ -241,6 +312,7 @@
   <div class="tab-bar">
     <button class="tab-btn active" data-tab="tab-list">멤버 목록</button>
     <button class="tab-btn" data-tab="tab-image">이미지 검색</button>
+    <button class="tab-btn" data-tab="tab-alloc-settings">분배 설정</button>
   </div>
 
   <!-- 탭: 멤버 목록 -->
@@ -285,6 +357,38 @@
         </thead>
         <tbody id="tbody"></tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- 탭: 분배 설정 -->
+  <div id="tab-alloc-settings" class="tab-panel">
+    <div class="alloc-settings-panel">
+      <h3>분배 아이템 설정</h3>
+      <p class="desc">아이템별 포인트 비용과 최소 참여율 조건을 관리합니다. 설정은 브라우저에 자동 저장됩니다.</p>
+
+      <div class="alloc-col-labels">
+        <span>아이템 이름</span>
+        <span>비용 (포인트)</span>
+        <span>최소 참여율 (%)</span>
+        <span></span>
+      </div>
+
+      <div class="alloc-list" id="alloc-settings-list"></div>
+
+      <div class="alloc-add-box">
+        <div class="add-title">아이템 추가</div>
+        <div class="alloc-add-row">
+          <input id="add-name"    type="text"   placeholder="아이템 이름" />
+          <input id="add-cost"    type="number" placeholder="비용" min="0" />
+          <input id="add-minrate" type="number" placeholder="없으면 빈칸" min="0" max="100" />
+          <button class="btn-add-item" id="btn-add-item">추가</button>
+        </div>
+        <div class="alloc-add-hint">최소 참여율 조건이 없는 아이템은 빈칸으로 두세요.</div>
+      </div>
+
+      <div class="alloc-reset-row">
+        <button class="btn-reset" id="btn-reset-alloc">기본값으로 초기화</button>
+      </div>
     </div>
   </div>
 
@@ -374,8 +478,9 @@
   let allData = [], sortCol = 'rank', sortDir = 1;
   let cachedUrl = '';
 
-  /* ── 분배 아이템 정의 ── */
-  const ALLOC_ITEMS = [
+  /* ── 분배 아이템 ── */
+  const LS_ALLOC = 'ap_alloc_items';
+  const DEFAULT_ALLOC_ITEMS = [
     { name: '영웅이동목재료', cost: 3000,  minRate: 60 },
     { name: '희귀 불씨',     cost: 10000, minRate: 70 },
     { name: '영웅불씨',      cost: 20000, minRate: 70 },
@@ -383,8 +488,107 @@
     { name: '전심',          cost: 7000,  minRate: null },
     { name: '별심',          cost: 20000, minRate: 70 },
   ];
+  let ALLOC_ITEMS = loadAllocItems();
   let activeAllocIdx = 0;
   let ocrFoundMembers = [];
+
+  function loadAllocItems() {
+    try {
+      const saved = localStorage.getItem(LS_ALLOC);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return DEFAULT_ALLOC_ITEMS.map(i => ({ ...i }));
+  }
+
+  function saveAllocItems() {
+    localStorage.setItem(LS_ALLOC, JSON.stringify(ALLOC_ITEMS));
+  }
+
+  /* ── 분배 설정 탭 렌더링 ── */
+  function renderAllocSettings() {
+    const list = document.getElementById('alloc-settings-list');
+    list.innerHTML = '';
+    ALLOC_ITEMS.forEach((item, idx) => {
+      const row = document.createElement('div');
+      row.className = 'alloc-row';
+      row.dataset.idx = idx;
+      row.innerHTML = `
+        <div class="item-name">${item.name}<span class="item-badge">${item.cost.toLocaleString()}P</span>${item.minRate != null ? `<span class="item-badge">참여율 ${item.minRate}%↑</span>` : ''}</div>
+        <div class="item-meta" style="display:none"><input type="text"   class="e-name"    value="${item.name}" /></div>
+        <div class="item-meta" style="display:none"><input type="number" class="e-cost"    value="${item.cost}" min="0" /></div>
+        <div class="item-meta" style="display:none"><input type="number" class="e-minrate" value="${item.minRate ?? ''}" min="0" max="100" placeholder="없음" /></div>
+        <div class="alloc-row-actions">
+          <button class="btn-icon edit-btn">수정</button>
+          <button class="btn-icon del del-btn">삭제</button>
+        </div>`;
+
+      const nameView  = row.querySelector('.item-name');
+      const nameInput = row.querySelector('.item-meta:nth-child(2)');
+      const costInput = row.querySelector('.item-meta:nth-child(3)');
+      const rateInput = row.querySelector('.item-meta:nth-child(4)');
+      const editBtn   = row.querySelector('.edit-btn');
+      const delBtn    = row.querySelector('.del-btn');
+
+      editBtn.addEventListener('click', () => {
+        const isEditing = row.classList.contains('editing');
+        if (!isEditing) {
+          // 뷰 → 편집 모드
+          row.classList.add('editing');
+          nameView.style.display  = 'none';
+          nameInput.style.display = '';
+          costInput.style.display = '';
+          rateInput.style.display = '';
+          editBtn.textContent = '저장';
+          editBtn.classList.add('save');
+        } else {
+          // 저장
+          const newName = row.querySelector('.e-name').value.trim();
+          const newCost = parseInt(row.querySelector('.e-cost').value);
+          const rateVal = row.querySelector('.e-minrate').value.trim();
+          const newRate = rateVal === '' ? null : parseInt(rateVal);
+          if (!newName || isNaN(newCost)) return;
+          ALLOC_ITEMS[idx] = { name: newName, cost: newCost, minRate: isNaN(newRate) ? null : newRate };
+          saveAllocItems();
+          if (ocrFoundMembers.length) { buildAllocButtons(); renderAllocTable(activeAllocIdx); }
+          renderAllocSettings();
+        }
+      });
+
+      delBtn.addEventListener('click', () => {
+        ALLOC_ITEMS.splice(idx, 1);
+        if (activeAllocIdx >= ALLOC_ITEMS.length) activeAllocIdx = Math.max(0, ALLOC_ITEMS.length - 1);
+        saveAllocItems();
+        if (ocrFoundMembers.length) { buildAllocButtons(); renderAllocTable(activeAllocIdx); }
+        renderAllocSettings();
+      });
+
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById('btn-add-item').addEventListener('click', () => {
+    const name    = document.getElementById('add-name').value.trim();
+    const cost    = parseInt(document.getElementById('add-cost').value);
+    const rateVal = document.getElementById('add-minrate').value.trim();
+    const minRate = rateVal === '' ? null : parseInt(rateVal);
+    if (!name || isNaN(cost)) return;
+    ALLOC_ITEMS.push({ name, cost, minRate: isNaN(minRate) ? null : minRate });
+    saveAllocItems();
+    document.getElementById('add-name').value    = '';
+    document.getElementById('add-cost').value    = '';
+    document.getElementById('add-minrate').value = '';
+    if (ocrFoundMembers.length) { buildAllocButtons(); renderAllocTable(activeAllocIdx); }
+    renderAllocSettings();
+  });
+
+  document.getElementById('btn-reset-alloc').addEventListener('click', () => {
+    if (!confirm('기본값으로 초기화하시겠습니까?')) return;
+    ALLOC_ITEMS = DEFAULT_ALLOC_ITEMS.map(i => ({ ...i }));
+    activeAllocIdx = 0;
+    saveAllocItems();
+    if (ocrFoundMembers.length) { buildAllocButtons(); renderAllocTable(activeAllocIdx); }
+    renderAllocSettings();
+  });
 
   function showPage(id) {
     document.querySelectorAll('.page, #page-setup').forEach(el => el.classList.remove('active'));
@@ -414,6 +618,7 @@
     const d = localStorage.getItem(LS_DASH_GID) || '';
     if (u) document.getElementById('inp-url').value = u;
     if (u && s && d) loadData(u, s, d);
+    renderAllocSettings();
   });
 
   /* ── 시트 검색 ── */
