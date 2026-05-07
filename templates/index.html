@@ -279,7 +279,7 @@
 <div id="page-setup" class="active">
   <div class="setup-box">
     <h2>⚔ 결사 멤버 현황</h2>
-    <p>스프레드시트 URL을 입력하고 <strong>시트 검색</strong>을 누르세요.<br>
+    <p>스프레드시트 URL을 입력하고 <strong>불러오기</strong>를 누르세요.<br>
        시트가 <strong>링크 공유(보기)</strong> 상태여야 합니다.</p>
 
     <div id="setup-error"></div>
@@ -288,30 +288,17 @@
       <label>스프레드시트 URL</label>
       <div class="url-row">
         <input id="inp-url" type="text" placeholder="https://docs.google.com/spreadsheets/d/.../edit" />
-        <button class="btn-search" id="btn-search">시트 검색</button>
       </div>
       <div class="form-hint">아무 탭에서나 주소창 URL을 복사하면 됩니다</div>
     </div>
 
-    <div id="sheet-select-area">
-      <div class="form-row">
-        <div class="form-group">
-          <label>스펙표 시트</label>
-          <select id="sel-spec"></select>
-        </div>
-        <div class="form-group">
-          <label>대시보드 시트</label>
-          <select id="sel-dash"></select>
-        </div>
-      </div>
-      <button class="btn-primary" id="btn-load">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-        데이터 불러오기
-      </button>
-    </div>
+    <button class="btn-primary" id="btn-load">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      불러오기
+    </button>
   </div>
 </div>
 
@@ -653,73 +640,58 @@
 
   /* ── 초기화 ── */
   window.addEventListener('DOMContentLoaded', () => {
-    const u = localStorage.getItem(LS_URL)      || '';
-    const s = localStorage.getItem(LS_SPEC_GID) || '';
-    const d = localStorage.getItem(LS_DASH_GID) || '';
-    if (u) document.getElementById('inp-url').value = u;
-    if (u && s && d) loadData(u, s, d);
+    const u = localStorage.getItem(LS_URL) || '';
+    if (u) { document.getElementById('inp-url').value = u; autoLoadData(u); }
     buildAllocButtons();
     renderAllocSettings();
   });
 
-  /* ── 시트 검색 ── */
-  document.getElementById('btn-search').addEventListener('click', async () => {
-    const url = document.getElementById('inp-url').value.trim();
+  /* ── URL로 시트 자동 감지 후 로드 ── */
+  async function autoLoadData(url) {
     const errEl = document.getElementById('setup-error');
     errEl.style.display = 'none';
-    if (!url) { showError('URL을 입력해주세요.'); return; }
-    const btn = document.getElementById('btn-search');
-    btn.disabled = true; btn.textContent = '검색 중…';
+    const btn = document.getElementById('btn-load');
+    btn.disabled = true;
     try {
       const res  = await fetch('/api/sheets?' + new URLSearchParams({ url }));
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
-      cachedUrl = url;
-      populateSheetSelects(json.sheets);
-      document.getElementById('sheet-select-area').style.display = 'block';
-    } catch (e) {
-      showError('시트 목록을 불러오지 못했습니다: ' + e.message);
-    } finally {
-      btn.disabled = false; btn.textContent = '시트 검색';
-    }
-  });
 
-  function populateSheetSelects(sheets) {
-    const specSel = document.getElementById('sel-spec');
-    const dashSel = document.getElementById('sel-dash');
-    specSel.innerHTML = ''; dashSel.innerHTML = '';
-    sheets.forEach(s => {
-      const o1 = document.createElement('option');
-      o1.value = s.gid; o1.textContent = s.title;
-      const o2 = o1.cloneNode(true);
-      specSel.appendChild(o1); dashSel.appendChild(o2);
-    });
-    const autoSelect = (sel, keywords) => {
-      const opt = [...sel.options].find(o => keywords.some(k => o.textContent.includes(k)));
-      if (opt) sel.value = opt.value;
-    };
-    autoSelect(specSel, ['스펙표', '스펙', 'spec']);
-    autoSelect(dashSel, ['대시보드', '참여율', 'dashboard']);
+      const sheets = json.sheets;
+      const findSheet = (keywords) =>
+        sheets.find(s => keywords.some(k => s.title.toLowerCase().includes(k.toLowerCase())));
+
+      const specSheet = findSheet(['스펙표', '스펙', 'spec']);
+      const dashSheet = findSheet(['대시보드', '참여율', 'dashboard', 'dash']);
+
+      if (!specSheet) throw new Error(`스펙표 시트를 찾을 수 없습니다. (시트 이름에 "스펙표" 또는 "스펙"이 포함되어야 합니다)\n사용 가능한 시트: ${sheets.map(s=>s.title).join(', ')}`);
+      if (!dashSheet) throw new Error(`대시보드 시트를 찾을 수 없습니다. (시트 이름에 "대시보드" 또는 "참여율"이 포함되어야 합니다)\n사용 가능한 시트: ${sheets.map(s=>s.title).join(', ')}`);
+
+      localStorage.setItem(LS_URL,      url);
+      localStorage.setItem(LS_SPEC_GID, specSheet.gid);
+      localStorage.setItem(LS_DASH_GID, dashSheet.gid);
+      loadData(url, specSheet.gid, dashSheet.gid);
+    } catch (e) {
+      showError(e.message);
+    } finally {
+      btn.disabled = false;
+    }
   }
 
-  /* ── 데이터 불러오기 ── */
   document.getElementById('btn-load').addEventListener('click', () => {
-    const url     = cachedUrl || document.getElementById('inp-url').value.trim();
-    const specGid = document.getElementById('sel-spec').value;
-    const dashGid = document.getElementById('sel-dash').value;
-    if (!specGid || !dashGid) { showError('시트를 선택해주세요.'); return; }
-    localStorage.setItem(LS_URL, url);
-    localStorage.setItem(LS_SPEC_GID, specGid);
-    localStorage.setItem(LS_DASH_GID, dashGid);
-    loadData(url, specGid, dashGid);
+    const url = document.getElementById('inp-url').value.trim();
+    if (!url) { showError('URL을 입력해주세요.'); return; }
+    autoLoadData(url);
+  });
+
+  document.getElementById('inp-url').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('btn-load').click();
   });
 
   document.getElementById('btn-change').addEventListener('click', () => showPage('page-setup'));
   document.getElementById('btn-refresh').addEventListener('click', () => {
-    const u = localStorage.getItem(LS_URL)      || '';
-    const s = localStorage.getItem(LS_SPEC_GID) || '';
-    const d = localStorage.getItem(LS_DASH_GID) || '';
-    if (u && s && d) loadData(u, s, d);
+    const u = localStorage.getItem(LS_URL) || '';
+    if (u) autoLoadData(u);
   });
 
   /* ── 데이터 로드 ── */
