@@ -154,6 +154,29 @@
     .ocr-tag { padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
     .ocr-tag.found    { background: #1e3a2a; color: #68d391; border: 1px solid #2a5a3a; }
     .ocr-tag.notfound { background: #2d2020; color: #fc8181; border: 1px solid #5a2a2a; cursor: default; text-decoration: line-through; opacity: 0.6; }
+
+    /* ── 분배 순위 섹션 ── */
+    #alloc-section { margin-top: 28px; }
+    .alloc-section-title { font-size: 0.9rem; font-weight: 700; color: #e2b96f; margin-bottom: 12px; }
+    .alloc-item-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .alloc-btn {
+      background: #1a1f2e; border: 1px solid #2d3748; border-radius: 8px;
+      color: #a0aec0; font-size: 0.78rem; font-weight: 600; padding: 7px 14px;
+      cursor: pointer; transition: all 0.18s; white-space: nowrap;
+    }
+    .alloc-btn:hover { border-color: #e2b96f; color: #e2e8f0; }
+    .alloc-btn.active { background: #2d3a1a; border-color: #68d391; color: #68d391; }
+    .alloc-btn .alloc-cost { font-size: 0.7rem; color: inherit; opacity: 0.7; margin-left: 4px; }
+    .alloc-btn .alloc-rate-badge {
+      display: inline-block; margin-left: 5px; font-size: 0.65rem; font-weight: 700;
+      padding: 1px 5px; border-radius: 3px; background: rgba(255,255,255,0.08); vertical-align: middle;
+    }
+    #alloc-result-info { font-size: 0.78rem; color: #718096; margin-bottom: 10px; }
+    #alloc-result-info .alloc-ineligible { color: #fc8181; }
+    th.col-alloc-rank, td.col-alloc-rank { width: 50px; text-align: center; }
+    th.col-alloc-eligible, td.col-alloc-eligible { width: 80px; text-align: center; }
+    .eligible-yes { color: #68d391; font-weight: 700; font-size: 0.82rem; }
+    .eligible-no  { color: #fc8181; font-size: 0.78rem; opacity: 0.6; }
   </style>
 </head>
 <body>
@@ -313,6 +336,30 @@
             <tbody id="ocr-tbody"></tbody>
           </table>
         </div>
+
+        <!-- 분배 순위 섹션 -->
+        <div id="alloc-section">
+          <div class="alloc-section-title">분배 순위</div>
+          <div class="alloc-item-btns" id="alloc-item-btns"></div>
+          <div id="alloc-result-info"></div>
+          <div class="table-wrap" style="padding:0;">
+            <table id="alloc-tbl">
+              <thead>
+                <tr>
+                  <th class="col-alloc-rank">#</th>
+                  <th class="col-id">아이디</th>
+                  <th class="col-cls">클래스</th>
+                  <th class="col-grade">등급</th>
+                  <th class="col-power">투력</th>
+                  <th class="col-sum">총합</th>
+                  <th class="col-rate">총 참여율</th>
+                  <th class="col-alloc-eligible">분배 가능</th>
+                </tr>
+              </thead>
+              <tbody id="alloc-tbody"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -326,6 +373,18 @@
 
   let allData = [], sortCol = 'rank', sortDir = 1;
   let cachedUrl = '';
+
+  /* ── 분배 아이템 정의 ── */
+  const ALLOC_ITEMS = [
+    { name: '영웅이동목재료', cost: 3000,  minRate: 60 },
+    { name: '희귀 불씨',     cost: 10000, minRate: 70 },
+    { name: '영웅불씨',      cost: 20000, minRate: 70 },
+    { name: '전퀴',          cost: 10000, minRate: 60 },
+    { name: '전심',          cost: 7000,  minRate: null },
+    { name: '별심',          cost: 20000, minRate: 70 },
+  ];
+  let activeAllocIdx = 0;
+  let ocrFoundMembers = [];
 
   function showPage(id) {
     document.querySelectorAll('.page, #page-setup').forEach(el => el.classList.remove('active'));
@@ -701,21 +760,21 @@
       return;
     }
 
+    ocrFoundMembers = found;
+
     // 총합 내림차순
     const sorted = [...found].sort((a, b) => b['총합'] - a['총합']);
-    const foundIds = new Set(found.map(m => m['아이디'].toLowerCase()));
 
     // 태그: 매칭된 ID만 표시 (found=초록, 나머지 토큰은 미표시)
     const tagsEl = document.getElementById('ocr-tags');
     tagsEl.innerHTML = '';
-    // 매칭된 멤버 태그
     sorted.forEach(m => {
       const span = document.createElement('span');
       span.className = 'ocr-tag found';
       span.textContent = m['아이디'];
       tagsEl.appendChild(span);
     });
-    // OCR은 됐지만 멤버 목록에 없는 토큰 (3자 이상만)
+    // OCR은 됐지만 멤버 목록에 없는 토큰
     const lowerIds = new Set(allData.map(m => m['아이디'].toLowerCase()));
     names.filter(n => n.length >= 2 && !lowerIds.has(n.toLowerCase())).forEach(n => {
       const span = document.createElement('span');
@@ -732,6 +791,97 @@
     document.getElementById('ocr-match-count').textContent =
       `${found.length}명 매칭됨 (총합 내림차순)`;
     document.getElementById('ocr-result-wrap').style.display = 'block';
+
+    buildAllocButtons();
+    renderAllocTable(activeAllocIdx);
+  }
+
+  /* ── 분배 아이템 버튼 생성 ── */
+  function buildAllocButtons() {
+    const container = document.getElementById('alloc-item-btns');
+    container.innerHTML = '';
+    ALLOC_ITEMS.forEach((item, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'alloc-btn' + (idx === activeAllocIdx ? ' active' : '');
+      const rateBadge = item.minRate
+        ? `<span class="alloc-rate-badge">참여율 ${item.minRate}%↑</span>`
+        : '';
+      btn.innerHTML = `${item.name}<span class="alloc-cost">${item.cost.toLocaleString()}P</span>${rateBadge}`;
+      btn.addEventListener('click', () => {
+        activeAllocIdx = idx;
+        document.querySelectorAll('.alloc-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderAllocTable(idx);
+      });
+      container.appendChild(btn);
+    });
+  }
+
+  /* ── 분배 순위 테이블 렌더링 ── */
+  function renderAllocTable(idx) {
+    const item = ALLOC_ITEMS[idx];
+    const tbody = document.getElementById('alloc-tbody');
+    tbody.innerHTML = '';
+
+    // 전체 OCR 멤버를 총합 내림차순 정렬 후 자격 여부 판단
+    const allSorted = [...ocrFoundMembers].sort((a, b) => b['총합'] - a['총합']);
+    let eligibleRank = 0;
+
+    allSorted.forEach(m => {
+      const rate   = parseFloat(m['총 참여율']);
+      const meetsRate = item.minRate === null || (!isNaN(rate) && rate >= item.minRate);
+      const meetsPoints = m['총합'] > item.cost;
+      const eligible = meetsRate && meetsPoints;
+
+      const rv = rate;
+      const [bc, tc] = rv >= 80 ? ['rh','ch'] : rv >= 50 ? ['rm','cm'] : isNaN(rv) ? ['rn','cn'] : ['rl','cl'];
+      const pct  = isNaN(rv) ? 0 : rv;
+      const rtxt = isNaN(rv) ? 'N/A' : rv.toFixed(1) + '%';
+      const g    = m['등급'] >= 24 ? 'g-high' : m['등급'] >= 22 ? 'g-mid' : 'g-low';
+
+      if (eligible) eligibleRank++;
+      const rankCell = eligible
+        ? `<span style="color:#e2b96f;font-weight:700;">${eligibleRank}</span>`
+        : `<span style="color:#4a5568;">—</span>`;
+
+      let reason = '';
+      if (!meetsPoints) reason = `총합 부족 (${m['총합'].toLocaleString()} ≤ ${item.cost.toLocaleString()})`;
+      else if (!meetsRate) reason = `참여율 미달 (${isNaN(rv) ? 'N/A' : rv.toFixed(1) + '%'} < ${item.minRate}%)`;
+      const eligibleCell = eligible
+        ? `<span class="eligible-yes">✓ 가능</span>`
+        : `<span class="eligible-no" title="${reason}">✗ 불가</span>`;
+
+      const tr = document.createElement('tr');
+      tr.style.opacity = eligible ? '1' : '0.45';
+      tr.innerHTML = `
+        <td class="col-alloc-rank">${rankCell}</td>
+        <td class="col-id" style="font-weight:600;">${m['아이디']}</td>
+        <td class="col-cls"><span class="cls-tag">${m['클래스']}</span></td>
+        <td class="col-grade"><span class="grade ${g}">${m['등급']}</span></td>
+        <td class="col-power">${m['투력'].toLocaleString()}</td>
+        <td class="col-sum">${m['총합'].toLocaleString()}</td>
+        <td class="col-rate"><div class="rate-cell">
+          <div class="rate-bar"><div class="rate-fill ${bc}" style="width:${pct}%"></div></div>
+          <span class="rate-text ${tc}">${rtxt}</span>
+        </div></td>
+        <td class="col-alloc-eligible">${eligibleCell}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    const eligibleCount = allSorted.filter(m => {
+      const rate = parseFloat(m['총 참여율']);
+      return m['총합'] > item.cost &&
+        (item.minRate === null || (!isNaN(rate) && rate >= item.minRate));
+    }).length;
+    const ineligible = ocrFoundMembers.length - eligibleCount;
+
+    document.getElementById('alloc-result-info').innerHTML =
+      `<strong style="color:#e2b96f;">${item.name}</strong> — ` +
+      `분배 가능 <strong style="color:#68d391;">${eligibleCount}명</strong>` +
+      (ineligible > 0
+        ? `, <span class="alloc-ineligible">${ineligible}명 불가</span> ` +
+          `(총합 ${item.cost.toLocaleString()}P 초과${item.minRate ? ` + 참여율 ${item.minRate}%↑` : ''} 조건)`
+        : '');
   }
 </script>
 </body>
