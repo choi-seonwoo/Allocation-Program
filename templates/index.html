@@ -128,10 +128,30 @@
     .rl { background: #fc8181; } .cl { color: #fc8181; }
     .rn { background: #4a5568; } .cn { color: #4a5568; }
 
-    /* ── 이미지 탭 ── */
-    .img-panel { padding: 24px 32px 40px; }
+    /* ── 분배 탭 ── */
+    .alloc-main-panel { padding: 24px 32px 60px; max-width: 800px; }
+
+    .alloc-step { margin-bottom: 28px; }
+    .step-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+    .step-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #e2b96f; color: #0f1117; font-size: 0.7rem; font-weight: 800; flex-shrink: 0;
+    }
+    .step-title { font-size: 0.9rem; font-weight: 700; color: #e2e8f0; }
+    .step-desc  { font-size: 0.75rem; color: #4a5568; }
+
+    #selected-item-info { margin-bottom: 4px; min-height: 24px; }
+    .selected-chip {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #2d3a1a; border: 1px solid #68d391; border-radius: 8px;
+      padding: 5px 12px; font-size: 0.78rem; color: #68d391;
+    }
+    .selected-chip .chip-cost { opacity: 0.75; }
+    .selected-chip .chip-rate { background: rgba(104,211,145,0.15); border-radius: 3px; padding: 1px 5px; font-size: 0.68rem; font-weight: 700; }
+
     .drop-zone {
-      border: 2px dashed #2d3748; border-radius: 12px; padding: 48px 24px;
+      border: 2px dashed #2d3748; border-radius: 12px; padding: 40px 24px;
       text-align: center; cursor: pointer; transition: all 0.2s;
       background: #1a1f2e; color: #4a5568; font-size: 0.88rem; position: relative;
     }
@@ -142,18 +162,27 @@
     .drop-zone .hint { font-size: 0.75rem; margin-top: 6px; color: #4a5568; }
 
     #img-preview-wrap { margin-top: 16px; display: none; }
-    #img-preview { max-width: 100%; max-height: 320px; border-radius: 8px; border: 1px solid #2d3748; }
+    #img-preview { max-width: 100%; max-height: 280px; border-radius: 8px; border: 1px solid #2d3748; }
 
-    #ocr-status { margin-top: 14px; font-size: 0.85rem; color: #718096; min-height: 24px; }
+    #ocr-status { margin-top: 12px; font-size: 0.85rem; color: #718096; min-height: 24px; }
     #ocr-status.error { color: #fc8181; }
 
-    #ocr-result-wrap { margin-top: 20px; display: none; }
-    .ocr-result-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
-    .ocr-result-header h3 { font-size: 0.9rem; font-weight: 700; color: #e2b96f; }
-    .ocr-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+    #ocr-result-wrap { margin-top: 4px; display: none; }
+    .ocr-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
     .ocr-tag { padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
     .ocr-tag.found    { background: #1e3a2a; color: #68d391; border: 1px solid #2a5a3a; }
     .ocr-tag.notfound { background: #2d2020; color: #fc8181; border: 1px solid #5a2a2a; cursor: default; text-decoration: line-through; opacity: 0.6; }
+
+    /* ── 아이템 설정 접이식 ── */
+    .alloc-settings-details { margin-top: 36px; border-top: 1px solid #2d3748; padding-top: 20px; }
+    .alloc-settings-details summary {
+      font-size: 0.78rem; font-weight: 600; color: #4a5568; cursor: pointer;
+      list-style: none; display: flex; align-items: center; gap: 6px; user-select: none;
+    }
+    .alloc-settings-details summary::before { content: '▶'; font-size: 0.6rem; transition: transform 0.2s; }
+    .alloc-settings-details[open] summary::before { transform: rotate(90deg); }
+    .alloc-settings-details summary:hover { color: #a0aec0; }
+    .alloc-settings-inner { margin-top: 16px; }
 
     /* ── 분배 순위 섹션 ── */
     #alloc-section { margin-top: 28px; }
@@ -311,8 +340,7 @@
   <!-- 탭 바 -->
   <div class="tab-bar">
     <button class="tab-btn active" data-tab="tab-list">멤버 목록</button>
-    <button class="tab-btn" data-tab="tab-image">이미지 검색</button>
-    <button class="tab-btn" data-tab="tab-alloc-settings">분배 설정</button>
+    <button class="tab-btn" data-tab="tab-alloc">분배</button>
   </div>
 
   <!-- 탭: 멤버 목록 -->
@@ -340,7 +368,6 @@
         새로고침
       </button>
     </div>
-
     <div class="table-wrap">
       <div id="status-msg"></div>
       <table id="tbl" style="display:none">
@@ -360,91 +387,56 @@
     </div>
   </div>
 
-  <!-- 탭: 분배 설정 -->
-  <div id="tab-alloc-settings" class="tab-panel">
-    <div class="alloc-settings-panel">
-      <h3>분배 아이템 설정</h3>
-      <p class="desc">아이템별 포인트 비용과 최소 참여율 조건을 관리합니다. 설정은 브라우저에 자동 저장됩니다.</p>
+  <!-- 탭: 분배 -->
+  <div id="tab-alloc" class="tab-panel">
+    <div class="alloc-main-panel">
 
-      <div class="alloc-col-labels">
-        <span>아이템 이름</span>
-        <span>비용 (포인트)</span>
-        <span>최소 참여율 (%)</span>
-        <span></span>
-      </div>
-
-      <div class="alloc-list" id="alloc-settings-list"></div>
-
-      <div class="alloc-add-box">
-        <div class="add-title">아이템 추가</div>
-        <div class="alloc-add-row">
-          <input id="add-name"    type="text"   placeholder="아이템 이름" />
-          <input id="add-cost"    type="number" placeholder="비용" min="0" />
-          <input id="add-minrate" type="number" placeholder="없으면 빈칸" min="0" max="100" />
-          <button class="btn-add-item" id="btn-add-item">추가</button>
+      <!-- Step 1: 아이템 선택 -->
+      <div class="alloc-step">
+        <div class="step-header">
+          <span class="step-num">1</span>
+          <span class="step-title">분배 아이템 선택</span>
         </div>
-        <div class="alloc-add-hint">최소 참여율 조건이 없는 아이템은 빈칸으로 두세요.</div>
+        <div class="alloc-item-btns" id="alloc-item-btns"></div>
+        <div id="selected-item-info"></div>
       </div>
 
-      <div class="alloc-reset-row">
-        <button class="btn-reset" id="btn-reset-alloc">기본값으로 초기화</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 탭: 이미지 검색 -->
-  <div id="tab-image" class="tab-panel">
-    <div class="img-panel">
-      <div class="drop-zone" id="drop-zone">
-        <input type="file" id="img-input" accept="image/*" />
-        <svg width="36" height="36" fill="none" stroke="#4a5568" stroke-width="1.5" viewBox="0 0 24 24">
-          <rect x="3" y="3" width="18" height="18" rx="2"/>
-          <circle cx="8.5" cy="8.5" r="1.5"/>
-          <polyline points="21 15 16 10 5 21"/>
-        </svg>
-        <p>이미지를 드래그하거나 클릭해서 업로드</p>
-        <p class="hint">참여자 이름이 담긴 스크린샷을 올리면 멤버 목록에서 찾아 총합 순으로 정렬합니다</p>
-      </div>
-
-      <div id="img-preview-wrap">
-        <img id="img-preview" src="" alt="미리보기" />
-      </div>
-
-      <div id="ocr-status"></div>
-
-      <!-- 원본 OCR 텍스트 (디버그용) -->
-      <details id="ocr-raw-wrap" style="display:none; margin-top:12px;">
-        <summary style="font-size:0.78rem; color:#4a5568; cursor:pointer;">OCR 원본 텍스트 보기</summary>
-        <pre id="ocr-raw-text" style="margin-top:8px; background:#1a1f2e; border:1px solid #2d3748; border-radius:6px; padding:10px; font-size:0.75rem; color:#a0aec0; white-space:pre-wrap; max-height:160px; overflow-y:auto;"></pre>
-      </details>
-
-      <div id="ocr-result-wrap">
-        <div class="ocr-result-header">
-          <h3>검색 결과</h3>
-          <span id="ocr-match-count" style="font-size:0.78rem;color:#718096;"></span>
+      <!-- Step 2: 이미지 업로드 -->
+      <div class="alloc-step">
+        <div class="step-header">
+          <span class="step-num">2</span>
+          <span class="step-title">신청자 이미지 업로드</span>
+          <span class="step-desc">카카오톡 투표 결과 캡처를 첨부하세요</span>
         </div>
-        <div id="ocr-tags" class="ocr-tags"></div>
-        <div class="table-wrap" style="padding:0;">
-          <table id="ocr-tbl">
-            <thead>
-              <tr>
-                <th class="col-rank">#</th>
-                <th class="col-id">아이디</th>
-                <th class="col-cls">클래스</th>
-                <th class="col-grade">등급</th>
-                <th class="col-power">투력</th>
-                <th class="col-sum">총합</th>
-                <th class="col-rate">총 참여율</th>
-              </tr>
-            </thead>
-            <tbody id="ocr-tbody"></tbody>
-          </table>
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" id="img-input" accept="image/*" />
+          <svg width="36" height="36" fill="none" stroke="#4a5568" stroke-width="1.5" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          <p>이미지를 드래그하거나 클릭해서 업로드</p>
+          <p class="hint">신청자 목록이 담긴 스크린샷을 올리면 자동으로 인식합니다</p>
         </div>
+        <div id="img-preview-wrap">
+          <img id="img-preview" src="" alt="미리보기" />
+        </div>
+        <div id="ocr-status"></div>
+        <details id="ocr-raw-wrap" style="display:none; margin-top:12px;">
+          <summary style="font-size:0.78rem; color:#4a5568; cursor:pointer;">OCR 원본 텍스트 보기</summary>
+          <pre id="ocr-raw-text" style="margin-top:8px; background:#1a1f2e; border:1px solid #2d3748; border-radius:6px; padding:10px; font-size:0.75rem; color:#a0aec0; white-space:pre-wrap; max-height:160px; overflow-y:auto;"></pre>
+        </details>
+      </div>
 
-        <!-- 분배 순위 섹션 -->
-        <div id="alloc-section">
-          <div class="alloc-section-title">분배 순위</div>
-          <div class="alloc-item-btns" id="alloc-item-btns"></div>
+      <!-- Step 3: 순위 결과 -->
+      <div id="ocr-result-wrap" style="display:none;">
+        <div class="alloc-step">
+          <div class="step-header">
+            <span class="step-num">3</span>
+            <span class="step-title">분배 순위</span>
+            <span id="ocr-match-count" style="font-size:0.78rem;color:#718096;"></span>
+          </div>
+          <div id="ocr-tags" class="ocr-tags"></div>
           <div id="alloc-result-info"></div>
           <div class="table-wrap" style="padding:0;">
             <table id="alloc-tbl">
@@ -465,6 +457,34 @@
           </div>
         </div>
       </div>
+
+      <!-- 아이템 설정 (접이식) -->
+      <details class="alloc-settings-details">
+        <summary>아이템 설정 관리</summary>
+        <div class="alloc-settings-inner">
+          <div class="alloc-col-labels">
+            <span>아이템 이름</span>
+            <span>비용 (포인트)</span>
+            <span>최소 참여율 (%)</span>
+            <span></span>
+          </div>
+          <div class="alloc-list" id="alloc-settings-list"></div>
+          <div class="alloc-add-box">
+            <div class="add-title">아이템 추가</div>
+            <div class="alloc-add-row">
+              <input id="add-name"    type="text"   placeholder="아이템 이름" />
+              <input id="add-cost"    type="number" placeholder="비용" min="0" />
+              <input id="add-minrate" type="number" placeholder="없으면 빈칸" min="0" max="100" />
+              <button class="btn-add-item" id="btn-add-item">추가</button>
+            </div>
+            <div class="alloc-add-hint">최소 참여율 조건이 없는 아이템은 빈칸으로 두세요.</div>
+          </div>
+          <div class="alloc-reset-row">
+            <button class="btn-reset" id="btn-reset-alloc">기본값으로 초기화</button>
+          </div>
+        </div>
+      </details>
+
     </div>
   </div>
 </div>
@@ -549,7 +569,8 @@
           if (!newName || isNaN(newCost)) return;
           ALLOC_ITEMS[idx] = { name: newName, cost: newCost, minRate: isNaN(newRate) ? null : newRate };
           saveAllocItems();
-          if (ocrFoundMembers.length) { buildAllocButtons(); renderAllocTable(activeAllocIdx); }
+          buildAllocButtons();
+          if (ocrFoundMembers.length) renderAllocTable(activeAllocIdx);
           renderAllocSettings();
         }
       });
@@ -558,7 +579,8 @@
         ALLOC_ITEMS.splice(idx, 1);
         if (activeAllocIdx >= ALLOC_ITEMS.length) activeAllocIdx = Math.max(0, ALLOC_ITEMS.length - 1);
         saveAllocItems();
-        if (ocrFoundMembers.length) { buildAllocButtons(); renderAllocTable(activeAllocIdx); }
+        buildAllocButtons();
+        if (ocrFoundMembers.length) renderAllocTable(activeAllocIdx);
         renderAllocSettings();
       });
 
@@ -577,7 +599,8 @@
     document.getElementById('add-name').value    = '';
     document.getElementById('add-cost').value    = '';
     document.getElementById('add-minrate').value = '';
-    if (ocrFoundMembers.length) { buildAllocButtons(); renderAllocTable(activeAllocIdx); }
+    buildAllocButtons();
+    if (ocrFoundMembers.length) renderAllocTable(activeAllocIdx);
     renderAllocSettings();
   });
 
@@ -586,7 +609,8 @@
     ALLOC_ITEMS = DEFAULT_ALLOC_ITEMS.map(i => ({ ...i }));
     activeAllocIdx = 0;
     saveAllocItems();
-    if (ocrFoundMembers.length) { buildAllocButtons(); renderAllocTable(activeAllocIdx); }
+    buildAllocButtons();
+    if (ocrFoundMembers.length) renderAllocTable(activeAllocIdx);
     renderAllocSettings();
   });
 
@@ -618,6 +642,7 @@
     const d = localStorage.getItem(LS_DASH_GID) || '';
     if (u) document.getElementById('inp-url').value = u;
     if (u && s && d) loadData(u, s, d);
+    buildAllocButtons();
     renderAllocSettings();
   });
 
@@ -847,7 +872,7 @@
     document.getElementById('ocr-result-wrap').style.display = 'none';
     document.getElementById('ocr-raw-wrap').style.display = 'none';
     document.getElementById('ocr-tags').innerHTML = '';
-    document.getElementById('ocr-tbody').innerHTML = '';
+    document.getElementById('alloc-tbody').innerHTML = '';
 
     ocrStatus.className = '';
     ocrStatus.innerHTML = '<span class="spinner"></span> 이미지 전처리 중…';
@@ -967,37 +992,28 @@
 
     ocrFoundMembers = found;
 
-    // 총합 내림차순
-    const sorted = [...found].sort((a, b) => b['총합'] - a['총합']);
-
-    // 태그: 매칭된 ID만 표시 (found=초록, 나머지 토큰은 미표시)
+    // 태그: 매칭 성공(초록) / 미매칭(빨강 취소선)
     const tagsEl = document.getElementById('ocr-tags');
     tagsEl.innerHTML = '';
-    sorted.forEach(m => {
+    const lowerIds = new Set(allData.map(m => m['아이디'].toLowerCase()));
+    found.forEach(m => {
       const span = document.createElement('span');
       span.className = 'ocr-tag found';
       span.textContent = m['아이디'];
       tagsEl.appendChild(span);
     });
-    // OCR은 됐지만 멤버 목록에 없는 토큰
-    const lowerIds = new Set(allData.map(m => m['아이디'].toLowerCase()));
-    names.filter(n => n.length >= 2 && !lowerIds.has(n.toLowerCase())).forEach(n => {
+    names.filter(n => {
+      const clean = n.replace(/\s*≈$/, '').toLowerCase();
+      return n.length >= 2 && !lowerIds.has(clean);
+    }).forEach(n => {
       const span = document.createElement('span');
       span.className = 'ocr-tag notfound';
       span.textContent = n;
       tagsEl.appendChild(span);
     });
 
-    // 결과 테이블
-    const tbody = document.getElementById('ocr-tbody');
-    tbody.innerHTML = '';
-    sorted.forEach((m, i) => tbody.appendChild(makeRow(m, i + 1)));
-
-    document.getElementById('ocr-match-count').textContent =
-      `${found.length}명 매칭됨 (총합 내림차순)`;
+    document.getElementById('ocr-match-count').textContent = `${found.length}명 인식됨`;
     document.getElementById('ocr-result-wrap').style.display = 'block';
-
-    buildAllocButtons();
     renderAllocTable(activeAllocIdx);
   }
 
@@ -1008,7 +1024,7 @@
     ALLOC_ITEMS.forEach((item, idx) => {
       const btn = document.createElement('button');
       btn.className = 'alloc-btn' + (idx === activeAllocIdx ? ' active' : '');
-      const rateBadge = item.minRate
+      const rateBadge = item.minRate != null
         ? `<span class="alloc-rate-badge">참여율 ${item.minRate}%↑</span>`
         : '';
       btn.innerHTML = `${item.name}<span class="alloc-cost">${item.cost.toLocaleString()}P</span>${rateBadge}`;
@@ -1016,10 +1032,26 @@
         activeAllocIdx = idx;
         document.querySelectorAll('.alloc-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        renderAllocTable(idx);
+        updateSelectedItemInfo();
+        if (ocrFoundMembers.length) renderAllocTable(idx);
       });
       container.appendChild(btn);
     });
+    updateSelectedItemInfo();
+  }
+
+  function updateSelectedItemInfo() {
+    const item = ALLOC_ITEMS[activeAllocIdx];
+    const el = document.getElementById('selected-item-info');
+    if (!item) { el.innerHTML = ''; return; }
+    const rateText = item.minRate != null
+      ? `<span class="chip-rate">참여율 ${item.minRate}%↑</span>`
+      : '';
+    el.innerHTML = `<div class="selected-chip">
+      <span>${item.name}</span>
+      <span class="chip-cost">${item.cost.toLocaleString()}P</span>
+      ${rateText}
+    </div>`;
   }
 
   /* ── 분배 순위 테이블 렌더링 ── */
