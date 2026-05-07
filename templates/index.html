@@ -214,23 +214,17 @@
 
     .alloc-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
     .alloc-row {
-      display: grid; grid-template-columns: 1fr 110px 110px auto;
+      display: grid; grid-template-columns: 1fr 100px 90px 130px auto;
       gap: 8px; align-items: center;
       background: #1a1f2e; border: 1px solid #2d3748; border-radius: 10px;
       padding: 10px 14px; transition: border-color 0.2s;
     }
     .alloc-row:hover { border-color: #3d4a5c; }
     .alloc-row.editing { border-color: #e2b96f; }
-    .alloc-row-view { display: contents; }
-    .alloc-row-edit { display: contents; }
 
-    .alloc-row .item-name { font-size: 0.87rem; font-weight: 600; color: #e2e8f0; grid-column: 1 / span 3; }
-    .alloc-row .item-meta { font-size: 0.75rem; color: #718096; }
-    .alloc-row .item-badge {
-      display: inline-block; font-size: 0.65rem; font-weight: 700;
-      padding: 1px 6px; border-radius: 3px; background: rgba(255,255,255,0.07);
-      color: #a0aec0; margin-left: 6px; vertical-align: middle;
-    }
+    .alloc-row .item-name { font-size: 0.87rem; font-weight: 600; color: #e2e8f0; }
+    .alloc-row .item-cell { font-size: 0.82rem; color: #a0aec0; }
+    .alloc-row .item-cell.na { color: #2d3748; }
     .alloc-row input {
       background: #0f1117; border: 1px solid #2d3748; border-radius: 6px;
       color: #e2e8f0; font-size: 0.82rem; padding: 6px 10px; outline: none;
@@ -254,7 +248,7 @@
       padding: 14px 16px;
     }
     .alloc-add-box .add-title { font-size: 0.75rem; font-weight: 600; color: #718096; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
-    .alloc-add-row { display: grid; grid-template-columns: 1fr 110px 110px auto; gap: 8px; align-items: center; }
+    .alloc-add-row { display: grid; grid-template-columns: 1fr 100px 90px 130px auto; gap: 8px; align-items: center; }
     .alloc-add-row input {
       background: #0f1117; border: 1px solid #2d3748; border-radius: 6px;
       color: #e2e8f0; font-size: 0.82rem; padding: 7px 10px; outline: none;
@@ -275,7 +269,7 @@
     .btn-reset:hover { border-color: #fc8181; color: #fc8181; }
 
     .col-name-header  { font-size: 0.68rem; color: #4a5568; }
-    .alloc-col-labels { display: grid; grid-template-columns: 1fr 110px 110px auto; gap: 8px; padding: 0 14px; margin-bottom: 6px; }
+    .alloc-col-labels { display: grid; grid-template-columns: 1fr 100px 90px 130px auto; gap: 8px; padding: 0 14px; margin-bottom: 6px; }
     .alloc-col-labels span { font-size: 0.65rem; color: #4a5568; text-transform: uppercase; letter-spacing: 0.06em; }
   </style>
 </head>
@@ -465,19 +459,21 @@
           <div class="alloc-col-labels">
             <span>아이템 이름</span>
             <span>비용 (포인트)</span>
-            <span>최소 참여율 (%)</span>
+            <span>최소 참여율</span>
+            <span>최소 투력</span>
             <span></span>
           </div>
           <div class="alloc-list" id="alloc-settings-list"></div>
           <div class="alloc-add-box">
             <div class="add-title">아이템 추가</div>
             <div class="alloc-add-row">
-              <input id="add-name"    type="text"   placeholder="아이템 이름" />
-              <input id="add-cost"    type="number" placeholder="비용" min="0" />
-              <input id="add-minrate" type="number" placeholder="없으면 빈칸" min="0" max="100" />
+              <input id="add-name"     type="text"   placeholder="아이템 이름" />
+              <input id="add-cost"     type="number" placeholder="비용" min="0" />
+              <input id="add-minrate"  type="number" placeholder="없으면 빈칸" min="0" max="100" />
+              <input id="add-minpower" type="number" placeholder="없으면 빈칸" min="0" />
               <button class="btn-add-item" id="btn-add-item">추가</button>
             </div>
-            <div class="alloc-add-hint">최소 참여율 조건이 없는 아이템은 빈칸으로 두세요.</div>
+            <div class="alloc-add-hint">참여율·투력 조건이 없는 아이템은 해당 칸을 빈칸으로 두세요.</div>
           </div>
           <div class="alloc-reset-row">
             <button class="btn-reset" id="btn-reset-alloc">기본값으로 초기화</button>
@@ -501,12 +497,12 @@
   /* ── 분배 아이템 ── */
   const LS_ALLOC = 'ap_alloc_items';
   const DEFAULT_ALLOC_ITEMS = [
-    { name: '영웅이동목재료', cost: 3000,  minRate: 60 },
-    { name: '희귀 불씨',     cost: 10000, minRate: 70 },
-    { name: '영웅불씨',      cost: 20000, minRate: 70 },
-    { name: '전퀴',          cost: 10000, minRate: 60 },
-    { name: '전심',          cost: 7000,  minRate: null },
-    { name: '별심',          cost: 20000, minRate: 70 },
+    { name: '영웅이동목재료', cost: 3000,  minRate: 60,   minPower: null },
+    { name: '희귀 불씨',     cost: 10000, minRate: 70,   minPower: null },
+    { name: '영웅불씨',      cost: 20000, minRate: 70,   minPower: null },
+    { name: '전퀴',          cost: 10000, minRate: 60,   minPower: null },
+    { name: '전심',          cost: 7000,  minRate: null, minPower: null },
+    { name: '별심',          cost: 20000, minRate: 70,   minPower: null },
   ];
   let ALLOC_ITEMS = loadAllocItems();
   let activeAllocIdx = 0;
@@ -515,7 +511,7 @@
   function loadAllocItems() {
     try {
       const saved = localStorage.getItem(LS_ALLOC);
-      if (saved) return JSON.parse(saved);
+      if (saved) return JSON.parse(saved).map(i => ({ minPower: null, ...i }));
     } catch {}
     return DEFAULT_ALLOC_ITEMS.map(i => ({ ...i }));
   }
@@ -532,42 +528,59 @@
       const row = document.createElement('div');
       row.className = 'alloc-row';
       row.dataset.idx = idx;
-      row.innerHTML = `
-        <div class="item-name">${item.name}<span class="item-badge">${item.cost.toLocaleString()}P</span>${item.minRate != null ? `<span class="item-badge">참여율 ${item.minRate}%↑</span>` : ''}</div>
-        <div class="item-meta" style="display:none"><input type="text"   class="e-name"    value="${item.name}" /></div>
-        <div class="item-meta" style="display:none"><input type="number" class="e-cost"    value="${item.cost}" min="0" /></div>
-        <div class="item-meta" style="display:none"><input type="number" class="e-minrate" value="${item.minRate ?? ''}" min="0" max="100" placeholder="없음" /></div>
-        <div class="alloc-row-actions">
-          <button class="btn-icon edit-btn">수정</button>
-          <button class="btn-icon del del-btn">삭제</button>
-        </div>`;
 
-      const nameView  = row.querySelector('.item-name');
-      const nameInput = row.querySelector('.item-meta:nth-child(2)');
-      const costInput = row.querySelector('.item-meta:nth-child(3)');
-      const rateInput = row.querySelector('.item-meta:nth-child(4)');
-      const editBtn   = row.querySelector('.edit-btn');
-      const delBtn    = row.querySelector('.del-btn');
+      // 뷰 셀
+      const vName  = document.createElement('div');
+      vName.className = 'item-name';
+      vName.textContent = item.name;
+
+      const vCost  = document.createElement('div');
+      vCost.className = 'item-cell';
+      vCost.textContent = item.cost.toLocaleString() + 'P';
+
+      const vRate  = document.createElement('div');
+      vRate.className = 'item-cell' + (item.minRate == null ? ' na' : '');
+      vRate.textContent = item.minRate != null ? item.minRate + '%↑' : '—';
+
+      const vPower = document.createElement('div');
+      vPower.className = 'item-cell' + (item.minPower == null ? ' na' : '');
+      vPower.textContent = item.minPower != null ? item.minPower.toLocaleString() + '↑' : '—';
+
+      // 편집 인풋
+      const mkInput = (type, val, placeholder, extra = '') =>
+        `<input type="${type}" value="${val ?? ''}" placeholder="${placeholder}" ${extra} style="display:none" />`;
+      const eNameEl  = Object.assign(document.createElement('input'), { type:'text',   value: item.name,          placeholder:'이름',     style:'display:none' });
+      const eCostEl  = Object.assign(document.createElement('input'), { type:'number', value: item.cost,          placeholder:'비용',     style:'display:none', min:0 });
+      const eRateEl  = Object.assign(document.createElement('input'), { type:'number', value: item.minRate ?? '', placeholder:'없으면 빈칸', style:'display:none', min:0, max:100 });
+      const ePowerEl = Object.assign(document.createElement('input'), { type:'number', value: item.minPower ?? '',placeholder:'없으면 빈칸', style:'display:none', min:0 });
+
+      // 액션
+      const actions = document.createElement('div');
+      actions.className = 'alloc-row-actions';
+      const editBtn = document.createElement('button');
+      editBtn.className = 'btn-icon edit-btn';
+      editBtn.textContent = '수정';
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn-icon del del-btn';
+      delBtn.textContent = '삭제';
+      actions.append(editBtn, delBtn);
+
+      row.append(vName, vCost, vRate, vPower, eNameEl, eCostEl, eRateEl, ePowerEl, actions);
 
       editBtn.addEventListener('click', () => {
-        const isEditing = row.classList.contains('editing');
-        if (!isEditing) {
-          // 뷰 → 편집 모드
+        if (!row.classList.contains('editing')) {
           row.classList.add('editing');
-          nameView.style.display  = 'none';
-          nameInput.style.display = '';
-          costInput.style.display = '';
-          rateInput.style.display = '';
+          [vName, vCost, vRate, vPower].forEach(el => el.style.display = 'none');
+          [eNameEl, eCostEl, eRateEl, ePowerEl].forEach(el => el.style.display = '');
           editBtn.textContent = '저장';
           editBtn.classList.add('save');
         } else {
-          // 저장
-          const newName = row.querySelector('.e-name').value.trim();
-          const newCost = parseInt(row.querySelector('.e-cost').value);
-          const rateVal = row.querySelector('.e-minrate').value.trim();
-          const newRate = rateVal === '' ? null : parseInt(rateVal);
+          const newName  = eNameEl.value.trim();
+          const newCost  = parseInt(eCostEl.value);
+          const newRate  = eRateEl.value.trim()  === '' ? null : parseInt(eRateEl.value);
+          const newPower = ePowerEl.value.trim() === '' ? null : parseInt(ePowerEl.value);
           if (!newName || isNaN(newCost)) return;
-          ALLOC_ITEMS[idx] = { name: newName, cost: newCost, minRate: isNaN(newRate) ? null : newRate };
+          ALLOC_ITEMS[idx] = { name: newName, cost: newCost, minRate: newRate, minPower: newPower };
           saveAllocItems();
           buildAllocButtons();
           if (ocrFoundMembers.length) renderAllocTable(activeAllocIdx);
@@ -589,16 +602,19 @@
   }
 
   document.getElementById('btn-add-item').addEventListener('click', () => {
-    const name    = document.getElementById('add-name').value.trim();
-    const cost    = parseInt(document.getElementById('add-cost').value);
-    const rateVal = document.getElementById('add-minrate').value.trim();
-    const minRate = rateVal === '' ? null : parseInt(rateVal);
+    const name     = document.getElementById('add-name').value.trim();
+    const cost     = parseInt(document.getElementById('add-cost').value);
+    const rateVal  = document.getElementById('add-minrate').value.trim();
+    const powerVal = document.getElementById('add-minpower').value.trim();
+    const minRate  = rateVal  === '' ? null : parseInt(rateVal);
+    const minPower = powerVal === '' ? null : parseInt(powerVal);
     if (!name || isNaN(cost)) return;
-    ALLOC_ITEMS.push({ name, cost, minRate: isNaN(minRate) ? null : minRate });
+    ALLOC_ITEMS.push({ name, cost, minRate, minPower });
     saveAllocItems();
-    document.getElementById('add-name').value    = '';
-    document.getElementById('add-cost').value    = '';
-    document.getElementById('add-minrate').value = '';
+    document.getElementById('add-name').value     = '';
+    document.getElementById('add-cost').value     = '';
+    document.getElementById('add-minrate').value  = '';
+    document.getElementById('add-minpower').value = '';
     buildAllocButtons();
     if (ocrFoundMembers.length) renderAllocTable(activeAllocIdx);
     renderAllocSettings();
@@ -1024,10 +1040,9 @@
     ALLOC_ITEMS.forEach((item, idx) => {
       const btn = document.createElement('button');
       btn.className = 'alloc-btn' + (idx === activeAllocIdx ? ' active' : '');
-      const rateBadge = item.minRate != null
-        ? `<span class="alloc-rate-badge">참여율 ${item.minRate}%↑</span>`
-        : '';
-      btn.innerHTML = `${item.name}<span class="alloc-cost">${item.cost.toLocaleString()}P</span>${rateBadge}`;
+      const rateBadge  = item.minRate  != null ? `<span class="alloc-rate-badge">참여율 ${item.minRate}%↑</span>`  : '';
+      const powerBadge = item.minPower != null ? `<span class="alloc-rate-badge">투력 ${item.minPower.toLocaleString()}↑</span>` : '';
+      btn.innerHTML = `${item.name}<span class="alloc-cost">${item.cost.toLocaleString()}P</span>${rateBadge}${powerBadge}`;
       btn.addEventListener('click', () => {
         activeAllocIdx = idx;
         document.querySelectorAll('.alloc-btn').forEach(b => b.classList.remove('active'));
@@ -1044,13 +1059,12 @@
     const item = ALLOC_ITEMS[activeAllocIdx];
     const el = document.getElementById('selected-item-info');
     if (!item) { el.innerHTML = ''; return; }
-    const rateText = item.minRate != null
-      ? `<span class="chip-rate">참여율 ${item.minRate}%↑</span>`
-      : '';
+    const rateText  = item.minRate  != null ? `<span class="chip-rate">참여율 ${item.minRate}%↑</span>`  : '';
+    const powerText = item.minPower != null ? `<span class="chip-rate">투력 ${item.minPower.toLocaleString()}↑</span>` : '';
     el.innerHTML = `<div class="selected-chip">
       <span>${item.name}</span>
       <span class="chip-cost">${item.cost.toLocaleString()}P</span>
-      ${rateText}
+      ${rateText}${powerText}
     </div>`;
   }
 
@@ -1066,9 +1080,10 @@
 
     allSorted.forEach(m => {
       const rate   = parseFloat(m['총 참여율']);
-      const meetsRate = item.minRate === null || (!isNaN(rate) && rate >= item.minRate);
+      const meetsRate   = item.minRate  == null || (!isNaN(rate) && rate >= item.minRate);
       const meetsPoints = m['총합'] > item.cost;
-      const eligible = meetsRate && meetsPoints;
+      const meetsPower  = item.minPower == null || m['투력'] >= item.minPower;
+      const eligible = meetsRate && meetsPoints && meetsPower;
 
       const rv = rate;
       const [bc, tc] = rv >= 80 ? ['rh','ch'] : rv >= 50 ? ['rm','cm'] : isNaN(rv) ? ['rn','cn'] : ['rl','cl'];
@@ -1082,8 +1097,9 @@
         : `<span style="color:#4a5568;">—</span>`;
 
       let reason = '';
-      if (!meetsPoints) reason = `총합 부족 (${m['총합'].toLocaleString()} ≤ ${item.cost.toLocaleString()})`;
-      else if (!meetsRate) reason = `참여율 미달 (${isNaN(rv) ? 'N/A' : rv.toFixed(1) + '%'} < ${item.minRate}%)`;
+      if (!meetsPoints)      reason = `총합 부족 (${m['총합'].toLocaleString()} ≤ ${item.cost.toLocaleString()})`;
+      else if (!meetsRate)   reason = `참여율 미달 (${isNaN(rv) ? 'N/A' : rv.toFixed(1) + '%'} < ${item.minRate}%)`;
+      else if (!meetsPower)  reason = `투력 미달 (${m['투력'].toLocaleString()} < ${item.minPower.toLocaleString()})`;
       const eligibleCell = eligible
         ? `<span class="eligible-yes">✓ 가능</span>`
         : `<span class="eligible-no" title="${reason}">✗ 불가</span>`;
